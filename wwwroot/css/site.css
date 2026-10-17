@@ -1,192 +1,21 @@
-/* Sistema de Ventas - Estilos Modernos */
-@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap');
+/* Estilos básicos para Sistema de Ventas */
 
-:root {
-    --primary: #1e3a5f;
-    --primary-hover: #152943;
-    --primary-light: #e8f0fe;
-    --accent: #10b981;
-    --accent-hover: #059669;
-    --danger: #ef4444;
-    --warning: #f59e0b;
-    --info: #0284c7;
-    --surface: #ffffff;
-    --background: #f8fafc;
-    --border: #e2e8f0;
-    --text-primary: #1e293b;
-    --text-secondary: #64748b;
-    --radius-sm: 6px;
-    --radius-md: 10px;
-    --radius-lg: 16px;
-    --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.05);
-    --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.07), 0 2px 4px -2px rgba(0, 0, 0, 0.05);
-    --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.08), 0 4px 6px -4px rgba(0, 0, 0, 0.04);
+html {
+    font-size: 14px;
+}
+
+@media (min-width: 768px) {
+    html {
+        font-size: 16px;
+    }
 }
 
 body {
-    font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
-    background-color: var(--background);
-    color: var(--text-primary);
-    min-height: 100vh;
-    display: flex;
-    flex-direction: column;
+    margin-bottom: 60px;
+    background-color: #f8f9fa;
 }
 
-/* Navbar Moderna */
-.app-navbar {
-    background: linear-gradient(135deg, #13273e 0%, #1e3a5f 100%);
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.15);
-    padding: 0.75rem 1.5rem;
-}
-
-.app-navbar .navbar-brand {
-    font-size: 1.25rem;
-    font-weight: 700;
-    color: #ffffff !important;
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    letter-spacing: -0.01em;
-}
-
-.app-navbar .nav-link {
-    color: #cbd5e1 !important;
-    font-weight: 500;
-    font-size: 0.95rem;
-    padding: 0.5rem 1rem !important;
-    border-radius: var(--radius-sm);
-    transition: all 0.2s ease;
-}
-
-.app-navbar .nav-link:hover,
-.app-navbar .nav-link.active {
-    color: #ffffff !important;
-    background-color: rgba(255, 255, 255, 0.12);
-}
-
-.app-navbar .nav-link.btn-nav-venta {
-    background-color: #10b981;
-    color: #ffffff !important;
-    font-weight: 600;
-    box-shadow: 0 2px 6px rgba(16, 185, 129, 0.3);
-}
-
-.app-navbar .nav-link.btn-nav-venta:hover {
-    background-color: #059669;
-}
-
-/* Tarjetas y Contenedores */
-.app-card {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: var(--radius-md);
-    box-shadow: var(--shadow-sm);
-    transition: box-shadow 0.2s ease;
-    overflow: hidden;
-}
-
-.app-card:hover {
-    box-shadow: var(--shadow-md);
-}
-
-.app-card-header {
-    background-color: #f1f5f9;
-    border-bottom: 1px solid var(--border);
-    padding: 0.75rem 1.25rem;
-    font-weight: 600;
-    font-size: 1rem;
-    color: #334155;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-}
-
-.app-card-body {
-    padding: 1.25rem;
-}
-
-/* Tablas */
-.table-custom {
-    width: 100%;
-    margin-bottom: 0;
-    border-collapse: separate;
-    border-spacing: 0;
-}
-
-.table-custom thead th {
-    background-color: #f8fafc;
-    color: #475569;
-    font-weight: 600;
-    font-size: 0.85rem;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-    padding: 0.85rem 1rem;
-    border-bottom: 2px solid var(--border);
-}
-
-.table-custom tbody td {
-    padding: 0.85rem 1rem;
-    vertical-align: middle;
-    border-bottom: 1px solid var(--border);
-    font-size: 0.95rem;
-}
-
-.table-custom tbody tr:hover {
-    background-color: #f8fafc;
-}
-
-/* Badges */
-.badge-custom {
-    padding: 0.35em 0.7em;
-    border-radius: 9999px;
-    font-weight: 600;
-    font-size: 0.75rem;
-}
-
-/* Pantalla de Venta */
-.sale-client-box {
-    background-color: #f0fdf4;
-    border: 1px solid #bbf7d0;
-    color: #166534;
-    border-radius: var(--radius-sm);
-    padding: 0.6rem 1rem;
-    font-weight: 600;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    min-height: 42px;
-}
-
-.sale-client-box.empty {
-    background-color: #f8fafc;
-    border: 1px dashed #cbd5e1;
-    color: #64748b;
-}
-
-.total-box {
-    background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
-    border: 2px solid #cbd5e1;
-    border-radius: var(--radius-md);
-    padding: 1rem 1.5rem;
-    text-align: right;
-}
-
-.total-box .total-label {
-    font-size: 0.9rem;
-    font-weight: 700;
-    letter-spacing: 0.05em;
-    color: #475569;
-    text-transform: uppercase;
-}
-
-.total-box .total-amount {
-    font-size: 2.2rem;
-    font-weight: 800;
-    color: #0f172a;
-    line-height: 1.1;
-}
-
-/* Autocomplete Dropdown */
+/* Sugerencias de autocompletado */
 .autocomplete-suggestions {
     position: absolute;
     top: 100%;
@@ -194,18 +23,16 @@ body {
     right: 0;
     z-index: 1050;
     background: #ffffff;
-    border: 1px solid #cbd5e1;
-    border-radius: 0 0 var(--radius-sm) var(--radius-sm);
-    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
-    max-height: 250px;
+    border: 1px solid #ced4da;
+    border-top: none;
+    max-height: 220px;
     overflow-y: auto;
 }
 
 .autocomplete-item {
-    padding: 0.65rem 1rem;
+    padding: 8px 12px;
     cursor: pointer;
-    border-bottom: 1px solid #f1f5f9;
-    transition: background-color 0.15s ease;
+    border-bottom: 1px solid #dee2e6;
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -217,34 +44,49 @@ body {
 
 .autocomplete-item:hover,
 .autocomplete-item.selected {
-    background-color: #eff6ff;
+    background-color: #e9ecef;
 }
 
-/* Botones */
-.btn-emerald {
-    background-color: #10b981;
-    border-color: #10b981;
-    color: #ffffff;
-    font-weight: 600;
+/* Caja de cliente en venta */
+.sale-client-box {
+    border: 1px solid #ced4da;
+    background-color: #e9ecef;
+    border-radius: 4px;
+    padding: 6px 10px;
+    min-height: 38px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
 }
 
-.btn-emerald:hover {
-    background-color: #059669;
-    border-color: #059669;
-    color: #ffffff;
-}
-
-/* Footer */
-footer {
-    margin-top: auto;
+.sale-client-box.empty {
+    border-style: dashed;
     background-color: #ffffff;
-    border-top: 1px solid var(--border);
-    padding: 1rem 0;
-    color: var(--text-secondary);
-    font-size: 0.875rem;
+    color: #6c757d;
 }
 
-/* Impresión de ticket */
+/* Caja de Total en venta */
+.total-box {
+    border: 1px solid #ced4da;
+    background-color: #e9ecef;
+    border-radius: 4px;
+    padding: 10px 15px;
+    text-align: right;
+}
+
+.total-box .total-label {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: #6c757d;
+}
+
+.total-box .total-amount {
+    font-size: 1.8rem;
+    font-weight: bold;
+    color: #212529;
+}
+
+/* Impresión */
 @media print {
     body * {
         visibility: hidden;
@@ -262,3 +104,4 @@ footer {
         display: none !important;
     }
 }
+

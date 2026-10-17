@@ -21,7 +21,9 @@ public class DetalleVenta
     // Relaciones
     public int VentaId { get; set; }
     public Venta? Venta { get; set; }
-    // Alias para compatibilidad con código existente
+
+    // Alias ignorado por EF Core para compatibilidad con código antiguo
+    [NotMapped]
     public Venta? venta { get => Venta; set => Venta = value; }
 
     [Required]
