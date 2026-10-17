@@ -1,0 +1,679 @@
+@{
+    ViewData["Title"] = "Nueva venta";
+    var clienteInicial = ViewBag.ClienteInicial as SistemaVentas.Models.Cliente;
+    var initialClientId = clienteInicial?.Id ?? 0;
+    var initialClientDisplay = clienteInicial != null 
+        ? (!string.IsNullOrEmpty(clienteInicial.Telefono) ? $"{clienteInicial.NombreCompleto} ({clienteInicial.Telefono})" : clienteInicial.NombreCompleto) 
+        : "";
+}
+
+<div class="row justify-content-center">
+    <div class="col-xl-10 col-lg-11 col-12">
+        <h2 class="fw-bold mb-3 text-secondary-emphasis">Registro de venta</h2>
+
+        <!-- Card 1: Datos de la venta -->
+        <div class="app-card mb-4">
+            <div class="app-card-header">
+                <span>1. Datos de la venta</span>
+            </div>
+            <div class="app-card-body">
+                <div class="row g-3 align-items-end">
+                    <!-- Fecha -->
+                    <div class="col-md-3 col-sm-6">
+                        <label class="form-label fw-semibold text-muted small">Fecha</label>
+                        <input type="text" id="ventaFecha" class="form-control bg-light" 
+                               value="@DateTime.Now.ToString("dd/MM/yyyy HH:mm")" readonly />
+                    </div>
+
+                    <!-- Buscar cliente -->
+                    <div class="col-md-5 col-sm-6 position-relative">
+                        <label class="form-label fw-semibold text-muted small">Buscar cliente (nombre o celular)</label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-white"><i class="bi bi-search text-muted"></i></span>
+                            <input type="text" id="inputBuscarCliente" class="form-control" 
+                                   placeholder="Escriba y presione Enter o Tab..." autocomplete="off" />
+                            <button type="button" class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#modalNuevoCliente" title="Registrar nuevo cliente">
+                                Registrar cliente
+                            </button>
+                        </div>
+                        <div id="clienteSuggestions" class="autocomplete-suggestions d-none"></div>
+                    </div>
+
+                    <!-- Cliente de esta venta -->
+                    <div class="col-md-4 col-12">
+                        <label class="form-label fw-semibold text-muted small">Cliente de esta venta</label>
+                        <input type="hidden" id="selectedClienteId" value="@initialClientId" />
+                        <div id="clienteSeleccionadoBox" class="sale-client-box @(string.IsNullOrEmpty(initialClientDisplay) ? "empty" : "")">
+                            <span id="clienteSeleccionadoTexto">
+                                <i class="bi bi-person-check-fill me-1"></i>
+                                <span id="clienteNombreSpan">@(string.IsNullOrEmpty(initialClientDisplay) ? "Sin cliente seleccionado" : initialClientDisplay)</span>
+                            </span>
+                            <button type="button" id="btnQuitarCliente" class="btn btn-sm btn-link text-danger p-0 ms-2 @(string.IsNullOrEmpty(initialClientDisplay) ? "d-none" : "")" title="Cambiar cliente">
+                                <i class="bi bi-x-circle-fill"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Card 2: Productos -->
+        <div class="app-card mb-4">
+            <div class="app-card-header">
+                <span>2. Productos</span>
+            </div>
+            <div class="app-card-body">
+                <div class="row g-3 align-items-end">
+                    <!-- Buscar producto -->
+                    <div class="col-md-5 col-12 position-relative">
+                        <label class="form-label fw-semibold text-muted small">Buscar producto</label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-white"><i class="bi bi-barcode text-muted"></i></span>
+                            <input type="text" id="inputBuscarProducto" class="form-control" 
+                                   placeholder="Escriba parte del nombre..." autocomplete="off" />
+                        </div>
+                        <input type="hidden" id="selectedProductoId" value="" />
+                        <input type="hidden" id="selectedProductoStock" value="0" />
+                        <div id="productoSuggestions" class="autocomplete-suggestions d-none"></div>
+                    </div>
+
+                    <!-- Precio -->
+                    <div class="col-md-3 col-sm-6">
+                        <label class="form-label fw-semibold text-muted small">Precio</label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-light text-muted">Bs</span>
+                            <input type="text" id="inputProductoPrecio" class="form-control bg-light" placeholder="0.00" readonly />
+                        </div>
+                    </div>
+
+                    <!-- Cantidad -->
+                    <div class="col-md-2 col-sm-6">
+                        <label class="form-label fw-semibold text-muted small">Cantidad</label>
+                        <input type="number" id="inputProductoCantidad" class="form-control" value="1" min="1" />
+                    </div>
+
+                    <!-- Botón Agregar -->
+                    <div class="col-md-2 col-12">
+                        <button type="button" id="btnAgregarProducto" class="btn btn-success w-100 fw-semibold d-flex align-items-center justify-content-center gap-1">
+                            <i class="bi bi-plus-lg"></i>
+                            <span>Agregar</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Detalle del producto seleccionado (Stock aviso) -->
+                <div id="stockAviso" class="mt-2 small text-muted d-none">
+                    <span id="stockAvisoTexto"></span>
+                </div>
+
+                <!-- Tabla de productos agregados -->
+                <div class="table-responsive mt-4">
+                    <table class="table table-bordered table-custom" id="tablaDetalles">
+                        <thead>
+                            <tr>
+                                <th style="width: 50px;">#</th>
+                                <th>Producto</th>
+                                <th class="text-end" style="width: 140px;">Precio</th>
+                                <th class="text-center" style="width: 140px;">Cantidad</th>
+                                <th class="text-end" style="width: 150px;">Subtotal</th>
+                                <th class="text-center" style="width: 80px;">Acción</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tablaDetallesBody">
+                            <tr id="filaVacia">
+                                <td colspan="6" class="text-center text-muted py-4">
+                                    <i class="bi bi-cart-x fs-4 d-block mb-1 text-secondary opacity-50"></i>
+                                    Aún no agregó productos
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Resumen y Pago -->
+                <div class="row g-3 mt-2 align-items-center justify-content-between">
+                    <div class="col-lg-7 col-md-6 col-12">
+                        <div class="row g-2 align-items-center">
+                            <div class="col-sm-6 col-12">
+                                <label class="form-label fw-semibold text-muted small mb-1">Efectivo Recibido</label>
+                                <div class="input-group">
+                                    <span class="input-group-text bg-light text-muted">Bs</span>
+                                    <input type="number" step="0.50" min="0" id="inputRecibido" class="form-control form-control-lg fw-bold" placeholder="0.00" />
+                                </div>
+                            </div>
+                            <div class="col-sm-6 col-12">
+                                <label class="form-label fw-semibold text-muted small mb-1">Cambio / Vuelto</label>
+                                <div class="input-group">
+                                    <span class="input-group-text bg-light text-muted">Bs</span>
+                                    <input type="text" id="inputCambio" class="form-control form-control-lg fw-bold bg-light text-success" value="0.00" readonly />
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- TOTAL A PAGAR -->
+                    <div class="col-lg-5 col-md-6 col-12">
+                        <div class="total-box">
+                            <div class="total-label">TOTAL A PAGAR</div>
+                            <div class="total-amount" id="lblTotalPagar">Bs 0.00</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Botones de Acción -->
+                <div class="d-flex justify-content-end gap-2 mt-4 pt-3 border-top">
+                    <a asp-action="Index" class="btn btn-outline-secondary px-4">
+                        Cancelar
+                    </a>
+                    <button type="button" id="btnFinalizarVenta" class="btn btn-primary btn-lg px-4 fw-bold d-flex align-items-center gap-2">
+                        <i class="bi bi-check2-circle fs-5"></i>
+                        <span>Guardar Venta</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal: Registrar Nuevo Cliente -->
+<div class="modal fade" id="modalNuevoCliente" tabindex="-1" aria-labelledby="modalNuevoClienteLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title" id="modalNuevoClienteLabel">
+                    <i class="bi bi-person-plus-fill me-2"></i>Registrar Nuevo Cliente
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+            </div>
+            <div class="modal-body">
+                <div id="modalClienteError" class="alert alert-danger d-none" role="alert"></div>
+                <form id="formNuevoCliente">
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Nombre <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" id="modalClienteNombre" required placeholder="Ej: Andy, María..." />
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Apellido</label>
+                        <input type="text" class="form-control" id="modalClienteApellido" placeholder="Ej: Flores, Quispe..." />
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Celular o Teléfono</label>
+                        <input type="text" class="form-control" id="modalClienteTelefono" placeholder="Ej: 16565432" />
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Correo Electrónico</label>
+                        <input type="email" class="form-control" id="modalClienteEmail" placeholder="cliente@correo.com" />
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" id="btnGuardarClienteModal" class="btn btn-primary">
+                    <i class="bi bi-save me-1"></i> Guardar y Seleccionar
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+<script>
+    // Variables de Estado de la Venta
+    let carrito = [];
+    let productoSeleccionado = null;
+
+    // Elementos del DOM
+    const inputBuscarCliente = document.getElementById('inputBuscarCliente');
+    const clienteSuggestions = document.getElementById('clienteSuggestions');
+    const selectedClienteId = document.getElementById('selectedClienteId');
+    const clienteNombreSpan = document.getElementById('clienteNombreSpan');
+    const clienteSeleccionadoBox = document.getElementById('clienteSeleccionadoBox');
+    const btnQuitarCliente = document.getElementById('btnQuitarCliente');
+
+    const inputBuscarProducto = document.getElementById('inputBuscarProducto');
+    const productoSuggestions = document.getElementById('productoSuggestions');
+    const selectedProductoId = document.getElementById('selectedProductoId');
+    const inputProductoPrecio = document.getElementById('inputProductoPrecio');
+    const inputProductoCantidad = document.getElementById('inputProductoCantidad');
+    const selectedProductoStock = document.getElementById('selectedProductoStock');
+    const stockAviso = document.getElementById('stockAviso');
+    const stockAvisoTexto = document.getElementById('stockAvisoTexto');
+    const btnAgregarProducto = document.getElementById('btnAgregarProducto');
+
+    const tablaDetallesBody = document.getElementById('tablaDetallesBody');
+    const filaVacia = document.getElementById('filaVacia');
+    const lblTotalPagar = document.getElementById('lblTotalPagar');
+    const inputRecibido = document.getElementById('inputRecibido');
+    const inputCambio = document.getElementById('inputCambio');
+    const btnFinalizarVenta = document.getElementById('btnFinalizarVenta');
+
+    // -------------------------------------------------------------
+    // BUSCADOR DE CLIENTES (Autocomplete y selección)
+    // -------------------------------------------------------------
+    let clienteTimer = null;
+    inputBuscarCliente.addEventListener('input', function () {
+        clearTimeout(clienteTimer);
+        const term = this.value.trim();
+        if (term.length < 1) {
+            clienteSuggestions.classList.add('d-none');
+            clienteSuggestions.innerHTML = '';
+            return;
+        }
+        clienteTimer = setTimeout(() => {
+            fetch(`/Clientes/BuscarJson?term=${encodeURIComponent(term)}`)
+                .then(r => r.json())
+                .then(clientes => {
+                    clienteSuggestions.innerHTML = '';
+                    if (!clientes || clientes.length === 0) {
+                        clienteSuggestions.innerHTML = '<div class="autocomplete-item text-muted">No se encontraron clientes</div>';
+                    } else {
+                        clientes.forEach(c => {
+                            const item = document.createElement('div');
+                            item.className = 'autocomplete-item';
+                            item.innerHTML = `<div><strong>${c.nombre}</strong> <span class="text-muted small">(${c.telefono || 'Sin teléfono'})</span></div>`;
+                            item.addEventListener('click', () => {
+                                seleccionarCliente(c.id, c.displayText);
+                            });
+                            clienteSuggestions.appendChild(item);
+                        });
+                    }
+                    clienteSuggestions.classList.remove('d-none');
+                });
+        }, 200);
+    });
+
+    // Enter en input cliente: busca y selecciona el primer resultado si hay uno
+    inputBuscarCliente.addEventListener('keydown', function (e) {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            const first = clienteSuggestions.querySelector('.autocomplete-item');
+            if (first) first.click();
+        }
+    });
+
+    function seleccionarCliente(id, displayText) {
+        selectedClienteId.value = id;
+        clienteNombreSpan.textContent = displayText;
+        clienteSeleccionadoBox.classList.remove('empty');
+        btnQuitarCliente.classList.remove('d-none');
+        inputBuscarCliente.value = '';
+        clienteSuggestions.classList.add('d-none');
+        inputBuscarProducto.focus();
+    }
+
+    btnQuitarCliente.addEventListener('click', function () {
+        selectedClienteId.value = '';
+        clienteNombreSpan.textContent = 'Sin cliente seleccionado';
+        clienteSeleccionadoBox.classList.add('empty');
+        btnQuitarCliente.classList.add('d-none');
+        inputBuscarCliente.focus();
+    });
+
+    // -------------------------------------------------------------
+    // REGISTRO RÁPIDO DE CLIENTE (Modal)
+    // -------------------------------------------------------------
+    const btnGuardarClienteModal = document.getElementById('btnGuardarClienteModal');
+    const modalClienteNombre = document.getElementById('modalClienteNombre');
+    const modalClienteApellido = document.getElementById('modalClienteApellido');
+    const modalClienteTelefono = document.getElementById('modalClienteTelefono');
+    const modalClienteEmail = document.getElementById('modalClienteEmail');
+    const modalClienteError = document.getElementById('modalClienteError');
+
+    btnGuardarClienteModal.addEventListener('click', function () {
+        const nombre = modalClienteNombre.value.trim();
+        if (!nombre) {
+            modalClienteError.textContent = 'El nombre es obligatorio.';
+            modalClienteError.classList.remove('d-none');
+            return;
+        }
+
+        const data = {
+            nombre: nombre,
+            apellido: modalClienteApellido.value.trim(),
+            telefono: modalClienteTelefono.value.trim(),
+            email: modalClienteEmail.value.trim()
+        };
+
+        btnGuardarClienteModal.disabled = true;
+        btnGuardarClienteModal.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Guardando...';
+
+        fetch('/Clientes/QuickCreate', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data)
+        })
+        .then(r => r.json())
+        .then(res => {
+            btnGuardarClienteModal.disabled = false;
+            btnGuardarClienteModal.innerHTML = '<i class="bi bi-save me-1"></i> Guardar y Seleccionar';
+
+            if (res.success) {
+                seleccionarCliente(res.id, res.displayText);
+                // Cerrar modal
+                const modal = bootstrap.Modal.getInstance(document.getElementById('modalNuevoCliente'));
+                modal.hide();
+                // Limpiar formulario
+                document.getElementById('formNuevoCliente').reset();
+                modalClienteError.classList.add('d-none');
+            } else {
+                modalClienteError.textContent = res.message || 'Error al guardar cliente.';
+                modalClienteError.classList.remove('d-none');
+            }
+        })
+        .catch(err => {
+            btnGuardarClienteModal.disabled = false;
+            btnGuardarClienteModal.innerHTML = '<i class="bi bi-save me-1"></i> Guardar y Seleccionar';
+            modalClienteError.textContent = 'Error de conexión: ' + err;
+            modalClienteError.classList.remove('d-none');
+        });
+    });
+
+    // -------------------------------------------------------------
+    // BUSCADOR DE PRODUCTOS (Autocomplete y selección)
+    // -------------------------------------------------------------
+    let productoTimer = null;
+    inputBuscarProducto.addEventListener('input', function () {
+        clearTimeout(productoTimer);
+        const term = this.value.trim();
+        if (term.length < 1) {
+            productoSuggestions.classList.add('d-none');
+            productoSuggestions.innerHTML = '';
+            limpiarSeleccionProducto();
+            return;
+        }
+        productoTimer = setTimeout(() => {
+            fetch(`/Productos/BuscarJson?term=${encodeURIComponent(term)}`)
+                .then(r => r.json())
+                .then(productos => {
+                    productoSuggestions.innerHTML = '';
+                    if (!productos || productos.length === 0) {
+                        productoSuggestions.innerHTML = '<div class="autocomplete-item text-muted">No se encontraron productos</div>';
+                    } else {
+                        productos.forEach(p => {
+                            const item = document.createElement('div');
+                            item.className = 'autocomplete-item';
+                            const stockBadge = p.stock > 0 
+                                ? `<span class="badge bg-success-subtle text-success">Stock: ${p.stock}</span>` 
+                                : `<span class="badge bg-danger-subtle text-danger">Agotado</span>`;
+                            item.innerHTML = `
+                                <div>
+                                    <div class="fw-semibold">${p.nombre}</div>
+                                    <small class="text-muted">${p.categoria || ''}</small>
+                                </div>
+                                <div class="text-end">
+                                    <div class="fw-bold text-dark">Bs ${parseFloat(p.precio).toFixed(2)}</div>
+                                    ${stockBadge}
+                                </div>
+                            `;
+                            item.addEventListener('click', () => {
+                                seleccionarProducto(p);
+                            });
+                            productoSuggestions.appendChild(item);
+                        });
+                    }
+                    productoSuggestions.classList.remove('d-none');
+                });
+        }, 200);
+    });
+
+    inputBuscarProducto.addEventListener('keydown', function (e) {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            const first = productoSuggestions.querySelector('.autocomplete-item');
+            if (first) first.click();
+        }
+    });
+
+    function seleccionarProducto(p) {
+        productoSeleccionado = p;
+        selectedProductoId.value = p.id;
+        inputBuscarProducto.value = p.nombre;
+        inputProductoPrecio.value = parseFloat(p.precio).toFixed(2);
+        selectedProductoStock.value = p.stock;
+        inputProductoCantidad.value = 1;
+        inputProductoCantidad.max = p.stock;
+
+        stockAvisoTexto.innerHTML = `<i class="bi bi-info-circle me-1"></i> Stock disponible: <strong>${p.stock}</strong> unidades.`;
+        stockAviso.classList.remove('d-none');
+
+        productoSuggestions.classList.add('d-none');
+        inputProductoCantidad.focus();
+        inputProductoCantidad.select();
+    }
+
+    function limpiarSeleccionProducto() {
+        productoSeleccionado = null;
+        selectedProductoId.value = '';
+        inputProductoPrecio.value = '';
+        selectedProductoStock.value = '0';
+        stockAviso.classList.add('d-none');
+    }
+
+    // Ocultar sugerencias al hacer clic fuera
+    document.addEventListener('click', function (e) {
+        if (!inputBuscarCliente.contains(e.target) && !clienteSuggestions.contains(e.target)) {
+            clienteSuggestions.classList.add('d-none');
+        }
+        if (!inputBuscarProducto.contains(e.target) && !productoSuggestions.contains(e.target)) {
+            productoSuggestions.classList.add('d-none');
+        }
+    });
+
+    // -------------------------------------------------------------
+    // AGREGAR PRODUCTO AL CARRITO
+    // -------------------------------------------------------------
+    btnAgregarProducto.addEventListener('click', agregarProductoAlCarrito);
+    inputProductoCantidad.addEventListener('keydown', function (e) {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            agregarProductoAlCarrito();
+        }
+    });
+
+    function agregarProductoAlCarrito() {
+        if (!productoSeleccionado || !selectedProductoId.value) {
+            alert('Por favor busque y seleccione un producto de la lista.');
+            inputBuscarProducto.focus();
+            return;
+        }
+
+        const cantidad = parseInt(inputProductoCantidad.value) || 0;
+        if (cantidad <= 0) {
+            alert('La cantidad debe ser mayor a 0.');
+            inputProductoCantidad.focus();
+            return;
+        }
+
+        const stockDisponible = parseInt(selectedProductoStock.value) || 0;
+        const yaEnCarrito = carrito.find(item => item.productoId === productoSeleccionado.id);
+        const cantidadTotal = (yaEnCarrito ? yaEnCarrito.cantidad : 0) + cantidad;
+
+        if (cantidadTotal > stockDisponible) {
+            alert(`Stock insuficiente para "${productoSeleccionado.nombre}". Disponible: ${stockDisponible}, Ya en venta: ${yaEnCarrito ? yaEnCarrito.cantidad : 0}`);
+            return;
+        }
+
+        if (yaEnCarrito) {
+            yaEnCarrito.cantidad += cantidad;
+            yaEnCarrito.subtotal = yaEnCarrito.cantidad * yaEnCarrito.precio;
+        } else {
+            carrito.push({
+                productoId: productoSeleccionado.id,
+                nombre: productoSeleccionado.nombre,
+                precio: parseFloat(productoSeleccionado.precio),
+                cantidad: cantidad,
+                stockMax: stockDisponible,
+                subtotal: cantidad * parseFloat(productoSeleccionado.precio)
+            });
+        }
+
+        // Limpiar campos de selección de producto
+        inputBuscarProducto.value = '';
+        inputProductoPrecio.value = '';
+        inputProductoCantidad.value = 1;
+        limpiarSeleccionProducto();
+        renderizarTabla();
+        inputBuscarProducto.focus();
+    }
+
+    // -------------------------------------------------------------
+    // RENDERIZAR TABLA Y RECALCULAR TOTALES
+    // -------------------------------------------------------------
+    function renderizarTabla() {
+        if (carrito.length === 0) {
+            filaVacia.style.display = '';
+            tablaDetallesBody.innerHTML = '';
+            tablaDetallesBody.appendChild(filaVacia);
+        } else {
+            tablaDetallesBody.innerHTML = '';
+            carrito.forEach((item, index) => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td class="text-center fw-semibold text-muted">${index + 1}</td>
+                    <td>
+                        <div class="fw-bold">${item.nombre}</div>
+                    </td>
+                    <td class="text-end">Bs ${item.precio.toFixed(2)}</td>
+                    <td class="text-center">
+                        <div class="input-group input-group-sm mx-auto" style="max-width: 120px;">
+                            <button class="btn btn-outline-secondary btn-sm" type="button" onclick="cambiarCantidad(${index}, -1)">-</button>
+                            <input type="number" class="form-control text-center" value="${item.cantidad}" min="1" max="${item.stockMax}" onchange="actualizarCantidadInput(${index}, this.value)" />
+                            <button class="btn btn-outline-secondary btn-sm" type="button" onclick="cambiarCantidad(${index}, 1)">+</button>
+                        </div>
+                    </td>
+                    <td class="text-end fw-bold text-dark">Bs ${item.subtotal.toFixed(2)}</td>
+                    <td class="text-center">
+                        <button type="button" class="btn btn-sm btn-outline-danger" onclick="eliminarDelCarrito(${index})" title="Eliminar producto">
+                            <i class="bi bi-trash"></i>
+                        </button>
+                    </td>
+                `;
+                tablaDetallesBody.appendChild(tr);
+            });
+        }
+
+        calcularTotales();
+    }
+
+    window.cambiarCantidad = function(index, delta) {
+        const item = carrito[index];
+        const nuevaCant = item.cantidad + delta;
+        if (nuevaCant <= 0) {
+            eliminarDelCarrito(index);
+            return;
+        }
+        if (nuevaCant > item.stockMax) {
+            alert(`No puede superar el stock disponible (${item.stockMax})`);
+            return;
+        }
+        item.cantidad = nuevaCant;
+        item.subtotal = item.cantidad * item.precio;
+        renderizarTabla();
+    };
+
+    window.actualizarCantidadInput = function(index, val) {
+        const item = carrito[index];
+        let cant = parseInt(val) || 1;
+        if (cant <= 0) cant = 1;
+        if (cant > item.stockMax) {
+            alert(`No puede superar el stock disponible (${item.stockMax})`);
+            cant = item.stockMax;
+        }
+        item.cantidad = cant;
+        item.subtotal = item.cantidad * item.precio;
+        renderizarTabla();
+    };
+
+    window.eliminarDelCarrito = function(index) {
+        carrito.splice(index, 1);
+        renderizarTabla();
+    };
+
+    function calcularTotales() {
+        const total = carrito.reduce((sum, item) => sum + item.subtotal, 0);
+        lblTotalPagar.textContent = `Bs ${total.toFixed(2)}`;
+
+        // Recalcular vuelto si hay monto recibido
+        calcularCambio(total);
+    }
+
+    inputRecibido.addEventListener('input', function () {
+        const total = carrito.reduce((sum, item) => sum + item.subtotal, 0);
+        calcularCambio(total);
+    });
+
+    function calcularCambio(total) {
+        const recibido = parseFloat(inputRecibido.value) || 0;
+        if (recibido >= total && total > 0) {
+            const cambio = recibido - total;
+            inputCambio.value = cambio.toFixed(2);
+            inputCambio.classList.remove('text-danger');
+            inputCambio.classList.add('text-success');
+        } else {
+            inputCambio.value = '0.00';
+            if (recibido > 0 && recibido < total) {
+                inputCambio.classList.add('text-danger');
+                inputCambio.classList.remove('text-success');
+            }
+        }
+    }
+
+    // -------------------------------------------------------------
+    // FINALIZAR VENTA (Envío al servidor)
+    // -------------------------------------------------------------
+    btnFinalizarVenta.addEventListener('click', function () {
+        const clienteId = parseInt(selectedClienteId.value) || 0;
+        if (clienteId <= 0) {
+            alert('Por favor busque y seleccione un cliente antes de finalizar la venta.');
+            inputBuscarCliente.focus();
+            return;
+        }
+
+        if (carrito.length === 0) {
+            alert('Debe agregar al menos un producto a la lista de venta.');
+            inputBuscarProducto.focus();
+            return;
+        }
+
+        const total = carrito.reduce((sum, item) => sum + item.subtotal, 0);
+        const recibido = parseFloat(inputRecibido.value) || total;
+
+        const payload = {
+            clienteId: clienteId,
+            recibido: recibido,
+            detalles: carrito.map(item => ({
+                productoId: item.productoId,
+                cantidad: item.cantidad
+            }))
+        };
+
+        btnFinalizarVenta.disabled = true;
+        btnFinalizarVenta.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span> Registrando venta...';
+
+        fetch('/Ventas/Create', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        })
+        .then(r => r.json())
+        .then(res => {
+            if (res.success) {
+                // Redirigir al detalle/comprobante de la venta
+                window.location.href = `/Ventas/Details/${res.id}`;
+            } else {
+                alert(res.message || 'Error al registrar la venta.');
+                btnFinalizarVenta.disabled = false;
+                btnFinalizarVenta.innerHTML = '<i class="bi bi-check2-circle fs-5"></i> <span>Guardar Venta</span>';
+            }
+        })
+        .catch(err => {
+            alert('Error de conexión al procesar la venta: ' + err);
+            btnFinalizarVenta.disabled = false;
+            btnFinalizarVenta.innerHTML = '<i class="bi bi-check2-circle fs-5"></i> <span>Guardar Venta</span>';
+        });
+    });
+
+    // Iniciar con la tabla renderizada
+    renderizarTabla();
+</script>
+}

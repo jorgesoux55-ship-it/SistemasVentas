@@ -1,0 +1,19 @@
+@model SistemaVentas.Models.Categoria
+@{
+    ViewData["Title"] = "Nueva Categoría";
+}
+
+<div class="row justify-content-center">
+    <div class="col-lg-6 col-md-8 col-12">
+        <div class="app-card">
+            <div class="app-card-header">
+                <span class="fs-5 fw-bold"><i class="bi bi-tag-fill me-2"></i>Nueva Categoría</span>
+            </div>
+            <div class="app-card-body">
+                <form asp-action="Create" method="post">
+                    <partial name="_Form" model="Model" />
+                </form>
+            </div>
+        </div>
+    </div>
+</div>

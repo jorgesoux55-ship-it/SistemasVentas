@@ -1,0 +1,63 @@
+@model SistemaVentas.Models.Producto
+@{
+    ViewData["Title"] = "Nuevo Producto";
+}
+
+<div class="row justify-content-center">
+    <div class="col-lg-7 col-md-9 col-12">
+        <div class="app-card">
+            <div class="app-card-header">
+                <span class="fs-5 fw-bold"><i class="bi bi-box-seam me-2"></i>Nuevo Producto</span>
+            </div>
+            <div class="app-card-body">
+                <form asp-action="Create" method="post">
+                    <div asp-validation-summary="ModelOnly" class="alert alert-danger" role="alert"></div>
+
+                    <div class="mb-3">
+                        <label asp-for="Nombre" class="form-label fw-semibold"></label>
+                        <input asp-for="Nombre" class="form-control" placeholder="Ej: Jabón Rexona 125g" autofocus />
+                        <span asp-validation-for="Nombre" class="text-danger small"></span>
+                    </div>
+
+                    <div class="mb-3">
+                        <label asp-for="CategoriaId" class="form-label fw-semibold"></label>
+                        <select asp-for="CategoriaId" asp-items="@ViewBag.CategoriaId" class="form-select">
+                            <option value="">-- Seleccionar Categoría --</option>
+                        </select>
+                        <span asp-validation-for="CategoriaId" class="text-danger small"></span>
+                    </div>
+
+                    <div class="row g-3 mb-3">
+                        <div class="col-sm-4 col-12">
+                            <label asp-for="Precio" class="form-label fw-semibold"></label>
+                            <div class="input-group">
+                                <span class="input-group-text">Bs</span>
+                                <input asp-for="Precio" type="number" step="0.50" min="0" class="form-control" placeholder="0.00" />
+                            </div>
+                            <span asp-validation-for="Precio" class="text-danger small"></span>
+                        </div>
+
+                        <div class="col-sm-4 col-12">
+                            <label asp-for="Stock" class="form-label fw-semibold"></label>
+                            <input asp-for="Stock" type="number" min="0" class="form-control" />
+                            <span asp-validation-for="Stock" class="text-danger small"></span>
+                        </div>
+
+                        <div class="col-sm-4 col-12">
+                            <label asp-for="StockMinimo" class="form-label fw-semibold"></label>
+                            <input asp-for="StockMinimo" type="number" min="0" class="form-control" />
+                            <span asp-validation-for="StockMinimo" class="text-danger small"></span>
+                        </div>
+                    </div>
+
+                    <div class="d-flex justify-content-end gap-2 pt-3 border-top">
+                        <a asp-action="Index" class="btn btn-outline-secondary">Cancelar</a>
+                        <button type="submit" class="btn btn-primary fw-semibold px-4">
+                            <i class="bi bi-save me-1"></i> Guardar Producto
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>

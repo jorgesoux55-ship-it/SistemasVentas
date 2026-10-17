@@ -1,0 +1,136 @@
+@model List<SistemaVentas.Models.Venta>
+@{
+    ViewData["Title"] = "Historial de Ventas";
+}
+
+<div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-2">
+    <div>
+        <h2 class="fw-bold mb-0 text-dark">Historial de Ventas</h2>
+        <p class="text-muted small mb-0">Registro y control de comprobantes emitidos</p>
+    </div>
+    <div class="d-flex gap-2">
+        <a asp-action="Create" class="btn btn-emerald fw-semibold px-3 d-flex align-items-center gap-2">
+            <i class="bi bi-cart-plus-fill"></i>
+            <span>Nueva Venta</span>
+        </a>
+    </div>
+</div>
+
+<!-- Tarjetas resumen rápido -->
+<div class="row g-3 mb-4">
+    <div class="col-md-6 col-12">
+        <div class="app-card p-3 d-flex align-items-center justify-content-between border-start border-primary border-4">
+            <div>
+                <span class="text-muted small text-uppercase fw-semibold">Ventas Registradas</span>
+                <h3 class="fw-bold mb-0 mt-1">@ViewBag.CantidadVentas</h3>
+            </div>
+            <div class="bg-primary-subtle text-primary p-3 rounded-circle">
+                <i class="bi bi-receipt fs-3"></i>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6 col-12">
+        <div class="app-card p-3 d-flex align-items-center justify-content-between border-start border-success border-4">
+            <div>
+                <span class="text-muted small text-uppercase fw-semibold">Total Recaudado</span>
+                <h3 class="fw-bold mb-0 mt-1 text-success">Bs @(((decimal)ViewBag.TotalRecaudado).ToString("N2"))</h3>
+            </div>
+            <div class="bg-success-subtle text-success p-3 rounded-circle">
+                <i class="bi bi-cash-stack fs-3"></i>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Filtros de búsqueda -->
+<div class="app-card mb-4">
+    <div class="app-card-body">
+        <form method="get" class="row g-2 align-items-center">
+            <div class="col-md-5 col-12">
+                <div class="input-group">
+                    <span class="input-group-text bg-white"><i class="bi bi-search text-muted"></i></span>
+                    <input type="text" name="buscar" value="@ViewBag.Buscar" class="form-control" placeholder="Buscar por cliente o N° de venta..." />
+                </div>
+            </div>
+            <div class="col-md-4 col-sm-6">
+                <input type="date" name="fecha" value="@ViewBag.Fecha" class="form-control" />
+            </div>
+            <div class="col-md-3 col-sm-6 d-flex gap-2">
+                <button type="submit" class="btn btn-primary w-100">
+                    <i class="bi bi-filter"></i> Filtrar
+                </button>
+                <a asp-action="Index" class="btn btn-outline-secondary" title="Limpiar filtros">
+                    <i class="bi bi-arrow-clockwise"></i>
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Tabla de ventas -->
+<div class="app-card">
+    <div class="table-responsive">
+        <table class="table table-hover table-custom">
+            <thead>
+                <tr>
+                    <th style="width: 80px;">N° Venta</th>
+                    <th>Fecha y Hora</th>
+                    <th>Cliente</th>
+                    <th class="text-center">Artículos</th>
+                    <th class="text-end">Total</th>
+                    <th class="text-end">Recibido</th>
+                    <th class="text-end">Cambio</th>
+                    <th class="text-center" style="width: 140px;">Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (Model == null || !Model.Any())
+                {
+                    <tr>
+                        <td colspan="8" class="text-center py-5 text-muted">
+                            <i class="bi bi-inbox fs-2 d-block mb-2 text-secondary opacity-50"></i>
+                            No se encontraron ventas registradas con los criterios seleccionados.
+                        </td>
+                    </tr>
+                }
+                else
+                {
+                    @foreach (var v in Model)
+                    {
+                        <tr>
+                            <td class="fw-bold">#@v.Id</td>
+                            <td>@v.Fecha.ToString("dd/MM/yyyy HH:mm")</td>
+                            <td>
+                                <span class="fw-semibold">@(v.Cliente?.NombreCompleto ?? "Sin cliente")</span>
+                                @if (!string.IsNullOrEmpty(v.Cliente?.Telefono))
+                                {
+                                    <span class="text-muted small d-block">Tel: @v.Cliente.Telefono</span>
+                                }
+                            </td>
+                            <td class="text-center">
+                                <span class="badge bg-secondary-subtle text-secondary rounded-pill px-2 py-1">
+                                    @v.Detalles.Sum(d => d.Cantidad) items
+                                </span>
+                            </td>
+                            <td class="text-end fw-bold text-dark">Bs @v.Total.ToString("N2")</td>
+                            <td class="text-end text-muted">Bs @v.Recibido.ToString("N2")</td>
+                            <td class="text-end text-success">Bs @v.Cambio.ToString("N2")</td>
+                            <td class="text-center">
+                                <div class="btn-group btn-group-sm">
+                                    <a asp-action="Details" asp-route-id="@v.Id" class="btn btn-outline-primary" title="Ver Comprobante">
+                                        <i class="bi bi-eye"></i>
+                                    </a>
+                                    <form asp-action="Anular" asp-route-id="@v.Id" method="post" class="d-inline" onsubmit="return confirm('¿Está seguro de anular la venta #@v.Id? El stock será devuelto al inventario.');">
+                                        <button type="submit" class="btn btn-outline-danger" title="Anular venta">
+                                            <i class="bi bi-x-circle"></i>
+                                        </button>
+                                    </form>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                }
+            </tbody>
+        </table>
+    </div>
+</div>

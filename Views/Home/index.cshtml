@@ -1,0 +1,200 @@
+@{
+    ViewData["Title"] = "Panel Principal";
+    var stockBajo = ViewBag.ProductosStockBajo as List<SistemaVentas.Models.Producto> ?? new();
+    var ultimasVentas = ViewBag.UltimasVentas as List<SistemaVentas.Models.Venta> ?? new();
+}
+
+<div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-2">
+    <div>
+        <h2 class="fw-bold mb-0 text-dark">Panel de Control</h2>
+        <p class="text-muted small mb-0">Resumen general y métricas comerciales del negocio</p>
+    </div>
+    <div class="d-flex gap-2">
+        <a asp-controller="Ventas" asp-action="Create" class="btn btn-emerald fw-semibold px-3 py-2 shadow-sm d-flex align-items-center gap-2">
+            <i class="bi bi-cart-plus-fill fs-5"></i>
+            <span>Nueva Venta</span>
+        </a>
+    </div>
+</div>
+
+<!-- Tarjetas Métricas Superiores -->
+<div class="row g-3 mb-4">
+    <div class="col-xl-3 col-sm-6 col-12">
+        <div class="app-card p-3 border-start border-primary border-4">
+            <div class="d-flex align-items-center justify-content-between">
+                <div>
+                    <span class="text-muted small text-uppercase fw-semibold">Ingresos Totales</span>
+                    <h3 class="fw-bold mb-0 mt-1 text-primary">Bs @(((decimal)ViewBag.TotalRecaudadoHistorico).ToString("N2"))</h3>
+                    <small class="text-muted">@ViewBag.TotalVentasHistorico ventas registradas</small>
+                </div>
+                <div class="bg-primary-subtle text-primary p-3 rounded-circle">
+                    <i class="bi bi-currency-dollar fs-3"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-xl-3 col-sm-6 col-12">
+        <div class="app-card p-3 border-start border-success border-4">
+            <div class="d-flex align-items-center justify-content-between">
+                <div>
+                    <span class="text-muted small text-uppercase fw-semibold">Ventas de Hoy</span>
+                    <h3 class="fw-bold mb-0 mt-1 text-success">Bs @(((decimal)ViewBag.VentasHoyMonto).ToString("N2"))</h3>
+                    <small class="text-muted">@ViewBag.VentasHoyCantidad comprobantes emitidos hoy</small>
+                </div>
+                <div class="bg-success-subtle text-success p-3 rounded-circle">
+                    <i class="bi bi-graph-up-arrow fs-3"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-xl-3 col-sm-6 col-12">
+        <div class="app-card p-3 border-start border-info border-4">
+            <div class="d-flex align-items-center justify-content-between">
+                <div>
+                    <span class="text-muted small text-uppercase fw-semibold">Total Productos</span>
+                    <h3 class="fw-bold mb-0 mt-1 text-dark">@ViewBag.TotalProductos</h3>
+                    <small class="text-muted">En @ViewBag.TotalCategorias categorías</small>
+                </div>
+                <div class="bg-info-subtle text-info p-3 rounded-circle">
+                    <i class="bi bi-box-seam fs-3"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-xl-3 col-sm-6 col-12">
+        <div class="app-card p-3 border-start border-warning border-4">
+            <div class="d-flex align-items-center justify-content-between">
+                <div>
+                    <span class="text-muted small text-uppercase fw-semibold">Clientes Activos</span>
+                    <h3 class="fw-bold mb-0 mt-1 text-dark">@ViewBag.TotalClientes</h3>
+                    <small class="text-muted">En cartera comercial</small>
+                </div>
+                <div class="bg-warning-subtle text-warning p-3 rounded-circle">
+                    <i class="bi bi-people fs-3"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-4">
+    <!-- Columna Izquierda: Acceso Rápido y Últimas Ventas -->
+    <div class="col-lg-8 col-12">
+        <!-- Accesos directos rápidos -->
+        <div class="row g-3 mb-4">
+            <div class="col-md-4 col-sm-6">
+                <a asp-controller="Ventas" asp-action="Create" class="app-card p-3 text-decoration-none d-block hover-lift text-center border-top border-3 border-success">
+                    <div class="text-success mb-2"><i class="bi bi-cart3 fs-1"></i></div>
+                    <h6 class="fw-bold text-dark mb-1">Registrar Venta</h6>
+                    <small class="text-muted">Crear nueva transacción</small>
+                </a>
+            </div>
+            <div class="col-md-4 col-sm-6">
+                <a asp-controller="Productos" asp-action="Index" class="app-card p-3 text-decoration-none d-block hover-lift text-center border-top border-3 border-primary">
+                    <div class="text-primary mb-2"><i class="bi bi-boxes fs-1"></i></div>
+                    <h6 class="fw-bold text-dark mb-1">Inventario</h6>
+                    <small class="text-muted">Administrar catálogo y stock</small>
+                </a>
+            </div>
+            <div class="col-md-4 col-sm-6">
+                <a asp-controller="Clientes" asp-action="Index" class="app-card p-3 text-decoration-none d-block hover-lift text-center border-top border-3 border-info">
+                    <div class="text-info mb-2"><i class="bi bi-person-lines-fill fs-1"></i></div>
+                    <h6 class="fw-bold text-dark mb-1">Clientes</h6>
+                    <small class="text-muted">Gestionar cartera de clientes</small>
+                </a>
+            </div>
+        </div>
+
+        <!-- Tabla de últimas ventas -->
+        <div class="app-card">
+            <div class="app-card-header">
+                <span class="fw-bold"><i class="bi bi-clock-history me-2"></i>Últimas Ventas Realizadas</span>
+                <a asp-controller="Ventas" asp-action="Index" class="small text-decoration-none">Ver todas &rarr;</a>
+            </div>
+            <div class="table-responsive">
+                <table class="table table-hover table-custom mb-0">
+                    <thead>
+                        <tr>
+                            <th>N°</th>
+                            <th>Fecha</th>
+                            <th>Cliente</th>
+                            <th class="text-end">Total</th>
+                            <th class="text-center">Comprobante</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @if (!ultimasVentas.Any())
+                        {
+                            <tr>
+                                <td colspan="5" class="text-center py-4 text-muted">
+                                    No hay ventas registradas aún. ¡Realice la primera venta!
+                                </td>
+                            </tr>
+                        }
+                        else
+                        {
+                            @foreach (var v in ultimasVentas)
+                            {
+                                <tr>
+                                    <td class="fw-bold text-muted">#@v.Id</td>
+                                    <td>@v.Fecha.ToString("dd/MM/yyyy HH:mm")</td>
+                                    <td class="fw-semibold">@(v.Cliente?.NombreCompleto ?? "Mostrador")</td>
+                                    <td class="text-end fw-bold text-dark">Bs @v.Total.ToString("N2")</td>
+                                    <td class="text-center">
+                                        <a asp-controller="Ventas" asp-action="Details" asp-route-id="@v.Id" class="btn btn-sm btn-outline-primary">
+                                            <i class="bi bi-receipt"></i> Ver
+                                        </a>
+                                    </td>
+                                </tr>
+                            }
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Columna Derecha: Alertas de Stock y Categorías -->
+    <div class="col-lg-4 col-12">
+        <!-- Tarjeta de Productos con Stock Bajo -->
+        <div class="app-card mb-4 border-warning">
+            <div class="app-card-header bg-warning-subtle text-dark">
+                <span class="fw-bold"><i class="bi bi-exclamation-triangle-fill text-warning me-2"></i>Alertas de Stock Bajo</span>
+            </div>
+            <div class="app-card-body p-0">
+                @if (!stockBajo.Any())
+                {
+                    <div class="p-4 text-center text-muted">
+                        <i class="bi bi-check-circle-fill text-success fs-3 d-block mb-1"></i>
+                        <span>Todos los productos tienen niveles de stock adecuados.</span>
+                    </div>
+                }
+                else
+                {
+                    <ul class="list-group list-group-flush">
+                        @foreach (var p in stockBajo)
+                        {
+                            <li class="list-group-item d-flex justify-content-between align-items-center py-3">
+                                <div>
+                                    <h6 class="mb-0 fw-semibold">@p.Nombre</h6>
+                                    <small class="text-muted">Mínimo: @p.StockMinimo u. | Cat: @(p.Categoria?.Nombre ?? "-")</small>
+                                </div>
+                                <div class="text-end">
+                                    <span class="badge @(p.Stock == 0 ? "bg-danger" : "bg-warning text-dark") fs-6 px-2 py-1">
+                                        @p.Stock u.
+                                    </span>
+                                    <a asp-controller="Productos" asp-action="Edit" asp-route-id="@p.Id" class="d-block small text-primary mt-1">
+                                        Reponer
+                                    </a>
+                                </div>
+                            </li>
+                        }
+                    </ul>
+                }
+            </div>
+        </div>
+    </div>
+</div>
