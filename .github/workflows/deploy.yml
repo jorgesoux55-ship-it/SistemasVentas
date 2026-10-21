@@ -30,4 +30,4 @@ jobs:
           exclude: |
             **/.git*
             **/.git*/**
-            **/ventas.db*
+            **/ventas.db
