@@ -48,6 +48,7 @@ else
 
 var app = builder.Build();
 // 4) Asegurar que la choquito 
+// 4) Ahora si 
 // 4) Asegurar que la base de datos y los datos iniciales existan
 using (var scope = app.Services.CreateScope())
 {
