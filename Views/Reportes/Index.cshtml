@@ -1,0 +1,698 @@
+@model SistemaVentas.Models.ViewModels.ReporteResumenViewModel
+@{
+    ViewData["Title"] = "Módulo de Reportes";
+    var periodoActual = Model.Filtro.Periodo;
+}
+
+<!-- Encabezado de la página -->
+<div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-3">
+    <div>
+        <h2 class="fw-bold mb-0 text-dark">
+            <i class="bi bi-bar-chart-fill text-primary me-2"></i>Módulo de Reportes
+        </h2>
+        <p class="text-muted small mb-0">Estadísticas comerciales, análisis de ventas e indicadores de rendimiento</p>
+    </div>
+    <div class="d-flex gap-2">
+        <a asp-action="ExportarCsv" 
+           asp-route-periodo="@Model.Filtro.Periodo" 
+           asp-route-fechaInicio="@Model.Filtro.FechaInicio.ToString("yyyy-MM-dd")" 
+           asp-route-fechaFin="@Model.Filtro.FechaFin.ToString("yyyy-MM-dd")" 
+           asp-route-clienteId="@Model.Filtro.ClienteId"
+           class="btn btn-outline-success shadow-sm d-flex align-items-center gap-1">
+            <i class="bi bi-file-earmark-spreadsheet-fill"></i>
+            <span>Exportar CSV / Excel</span>
+        </a>
+        <button type="button" onclick="window.print()" class="btn btn-outline-dark shadow-sm d-flex align-items-center gap-1">
+            <i class="bi bi-printer-fill"></i>
+            <span>Imprimir</span>
+        </button>
+    </div>
+</div>
+
+<!-- Panel de Filtros -->
+<div class="card shadow-sm border-0 mb-4 rounded-3 filter-panel">
+    <div class="card-body p-3 p-md-4">
+        <form method="get" asp-action="Index" id="filtroForm">
+            <!-- Píldoras de períodos predefinidos -->
+            <div class="d-flex flex-wrap gap-2 mb-3 align-items-center">
+                <span class="text-muted small fw-bold me-1 text-uppercase">Período:</span>
+                <button type="submit" name="periodo" value="hoy" class="btn btn-sm @(periodoActual == "hoy" ? "btn-primary shadow-sm" : "btn-light border") rounded-pill px-3">Hoy</button>
+                <button type="submit" name="periodo" value="ayer" class="btn btn-sm @(periodoActual == "ayer" ? "btn-primary shadow-sm" : "btn-light border") rounded-pill px-3">Ayer</button>
+                <button type="submit" name="periodo" value="semana" class="btn btn-sm @(periodoActual == "semana" ? "btn-primary shadow-sm" : "btn-light border") rounded-pill px-3">Últimos 7 Días</button>
+                <button type="submit" name="periodo" value="mes" class="btn btn-sm @(periodoActual == "mes" ? "btn-primary shadow-sm" : "btn-light border") rounded-pill px-3">Este Mes</button>
+                <button type="submit" name="periodo" value="mes_anterior" class="btn btn-sm @(periodoActual == "mes_anterior" ? "btn-primary shadow-sm" : "btn-light border") rounded-pill px-3">Mes Anterior</button>
+                <button type="submit" name="periodo" value="anio" class="btn btn-sm @(periodoActual == "anio" ? "btn-primary shadow-sm" : "btn-light border") rounded-pill px-3">Año Actual</button>
+                <button type="button" class="btn btn-sm @(periodoActual == "personalizado" ? "btn-primary shadow-sm" : "btn-light border") rounded-pill px-3" onclick="togglePersonalizado()">Personalizado</button>
+            </div>
+
+            <!-- Rango y Filtros selectivos -->
+            <div class="row g-3 align-items-end @(periodoActual == "personalizado" ? "" : "d-none")" id="seccionPersonalizado">
+                <input type="hidden" name="periodo" id="inputPeriodo" value="@periodoActual" />
+                <div class="col-md-3 col-sm-6">
+                    <label class="form-label small fw-semibold text-muted">Fecha Inicio</label>
+                    <input type="date" name="fechaInicio" class="form-control form-control-sm" value="@Model.Filtro.FechaInicio.ToString("yyyy-MM-dd")" />
+                </div>
+                <div class="col-md-3 col-sm-6">
+                    <label class="form-label small fw-semibold text-muted">Fecha Fin</label>
+                    <input type="date" name="fechaFin" class="form-control form-control-sm" value="@Model.Filtro.FechaFin.ToString("yyyy-MM-dd")" />
+                </div>
+                <div class="col-md-3 col-sm-6">
+                    <label class="form-label small fw-semibold text-muted">Filtrar por Cliente</label>
+                    <select name="clienteId" class="form-select form-select-sm" asp-items="ViewBag.Clientes">
+                        <option value="">-- Todos los Clientes --</option>
+                    </select>
+                </div>
+                <div class="col-md-3 col-sm-6">
+                    <button type="submit" class="btn btn-sm btn-primary w-100">
+                        <i class="bi bi-funnel-fill me-1"></i> Aplicar Filtros
+                    </button>
+                </div>
+            </div>
+        </form>
+
+        <div class="mt-2 text-muted small">
+            <i class="bi bi-calendar-event me-1 text-primary"></i> 
+            Rango activo: <strong>@Model.Filtro.FechaInicio.ToString("dd/MM/yyyy")</strong> hasta <strong>@Model.Filtro.FechaFin.ToString("dd/MM/yyyy")</strong>
+        </div>
+    </div>
+</div>
+
+<!-- Tarjetas Métricas KPI -->
+<div class="row g-3 mb-4">
+    <!-- Total Facturado -->
+    <div class="col-xl-3 col-sm-6 col-12">
+        <div class="card border-0 shadow-sm rounded-3 p-3 border-start border-4 border-success h-100 bg-white">
+            <div class="d-flex justify-content-between align-items-start">
+                <div>
+                    <span class="text-muted small text-uppercase fw-bold">Total Recaudado</span>
+                    <h3 class="fw-bold mb-0 mt-1 text-success">Bs @Model.TotalVendido.ToString("N2")</h3>
+                    <small class="text-muted">En el período consultado</small>
+                </div>
+                <div class="bg-success-subtle text-success p-3 rounded-circle">
+                    <i class="bi bi-currency-dollar fs-3"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Total Transacciones -->
+    <div class="col-xl-3 col-sm-6 col-12">
+        <div class="card border-0 shadow-sm rounded-3 p-3 border-start border-4 border-primary h-100 bg-white">
+            <div class="d-flex justify-content-between align-items-start">
+                <div>
+                    <span class="text-muted small text-uppercase fw-bold">Transacciones</span>
+                    <h3 class="fw-bold mb-0 mt-1 text-primary">@Model.TotalTransacciones</h3>
+                    <small class="text-muted">Comprobantes emitidos</small>
+                </div>
+                <div class="bg-primary-subtle text-primary p-3 rounded-circle">
+                    <i class="bi bi-receipt fs-3"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Ticket Promedio -->
+    <div class="col-xl-3 col-sm-6 col-12">
+        <div class="card border-0 shadow-sm rounded-3 p-3 border-start border-4 border-info h-100 bg-white">
+            <div class="d-flex justify-content-between align-items-start">
+                <div>
+                    <span class="text-muted small text-uppercase fw-bold">Ticket Promedio</span>
+                    <h3 class="fw-bold mb-0 mt-1 text-dark">Bs @Model.TicketPromedio.ToString("N2")</h3>
+                    <small class="text-muted">Promedio por venta</small>
+                </div>
+                <div class="bg-info-subtle text-info p-3 rounded-circle">
+                    <i class="bi bi-calculator fs-3"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Unidades Vendidas -->
+    <div class="col-xl-3 col-sm-6 col-12">
+        <div class="card border-0 shadow-sm rounded-3 p-3 border-start border-4 border-warning h-100 bg-white">
+            <div class="d-flex justify-content-between align-items-start">
+                <div>
+                    <span class="text-muted small text-uppercase fw-bold">Unidades Vendidas</span>
+                    <h3 class="fw-bold mb-0 mt-1 text-dark">@Model.TotalUnidadesVendidas u.</h3>
+                    <small class="text-muted">Artículos despachados</small>
+                </div>
+                <div class="bg-warning-subtle text-warning p-3 rounded-circle">
+                    <i class="bi bi-box-seam-fill fs-3"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Pestañas de Navegación de Reportes -->
+<ul class="nav nav-pills mb-4 gap-2 border-bottom pb-3" id="reportTabs" role="tablist">
+    <li class="nav-item" role="presentation">
+        <button class="nav-link active fw-semibold" id="tab-graficos-btn" data-bs-toggle="tab" data-bs-target="#tab-graficos" type="button" role="tab">
+            <i class="bi bi-pie-chart-fill me-1"></i> Gráficos y Tendencias
+        </button>
+    </li>
+    <li class="nav-item" role="presentation">
+        <button class="nav-link fw-semibold" id="tab-ventas-btn" data-bs-toggle="tab" data-bs-target="#tab-ventas" type="button" role="tab">
+            <i class="bi bi-table me-1"></i> Ventas Detalladas (@Model.Transacciones.Count)
+        </button>
+    </li>
+    <li class="nav-item" role="presentation">
+        <button class="nav-link fw-semibold" id="tab-productos-btn" data-bs-toggle="tab" data-bs-target="#tab-productos" type="button" role="tab">
+            <i class="bi bi-trophy-fill me-1"></i> Top Productos & Categorías
+        </button>
+    </li>
+    <li class="nav-item" role="presentation">
+        <button class="nav-link fw-semibold" id="tab-clientes-btn" data-bs-toggle="tab" data-bs-target="#tab-clientes" type="button" role="tab">
+            <i class="bi bi-people-fill me-1"></i> Clientes Frecuentes
+        </button>
+    </li>
+    <li class="nav-item" role="presentation">
+        <button class="nav-link fw-semibold text-danger" id="tab-inventario-btn" data-bs-toggle="tab" data-bs-target="#tab-inventario" type="button" role="tab">
+            <i class="bi bi-exclamation-triangle-fill me-1"></i> Stock Crítico (@Model.ProductosStockBajo.Count)
+        </button>
+    </li>
+</ul>
+
+<!-- Contenido de las Pestañas -->
+<div class="tab-content" id="reportTabsContent">
+
+    <!-- 1. PESTAÑA: GRÁFICOS Y TENDENCIAS -->
+    <div class="tab-pane fade show active" id="tab-graficos" role="tabpanel">
+        <div class="row g-4 mb-4">
+            <!-- Gráfico de Ventas Diarias -->
+            <div class="col-lg-8 col-12">
+                <div class="card shadow-sm border-0 rounded-3 h-100">
+                    <div class="card-header bg-white py-3 border-0 d-flex justify-content-between align-items-center">
+                        <span class="fw-bold text-dark"><i class="bi bi-graph-up text-primary me-2"></i>Evolución de Ingresos (Bs)</span>
+                        <span class="badge bg-primary-subtle text-primary">Cronológico</span>
+                    </div>
+                    <div class="card-body">
+                        <div style="height: 320px; position: relative;">
+                            <canvas id="chartVentasDiarias"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Gráfico de Ventas por Categoría -->
+            <div class="col-lg-4 col-12">
+                <div class="card shadow-sm border-0 rounded-3 h-100">
+                    <div class="card-header bg-white py-3 border-0 d-flex justify-content-between align-items-center">
+                        <span class="fw-bold text-dark"><i class="bi bi-pie-chart text-success me-2"></i>Ventas por Categoría</span>
+                        <span class="badge bg-success-subtle text-success">Participación</span>
+                    </div>
+                    <div class="card-body d-flex flex-column justify-content-center">
+                        <div style="height: 250px; position: relative;">
+                            <canvas id="chartCategorias"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Gráfico de Top Productos -->
+        <div class="card shadow-sm border-0 rounded-3">
+            <div class="card-header bg-white py-3 border-0">
+                <span class="fw-bold text-dark"><i class="bi bi-bar-chart-steps text-info me-2"></i>Top 5 Productos Más Vendidos (Ingresos)</span>
+            </div>
+            <div class="card-body">
+                <div style="height: 260px; position: relative;">
+                    <canvas id="chartTopProductos"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 2. PESTAÑA: VENTAS DETALLADAS -->
+    <div class="tab-pane fade" id="tab-ventas" role="tabpanel">
+        <div class="card shadow-sm border-0 rounded-3">
+            <div class="card-header bg-white py-3 d-flex flex-wrap justify-content-between align-items-center gap-2">
+                <span class="fw-bold"><i class="bi bi-receipt me-2"></i>Historial de Transacciones del Período</span>
+                <input type="text" id="tablaVentasSearch" class="form-control form-control-sm w-auto" placeholder="Buscar por cliente o ID..." onkeyup="filtrarTablaVentas()" />
+            </div>
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0" id="tablaVentas">
+                    <thead class="table-light">
+                        <tr>
+                            <th>N° Venta</th>
+                            <th>Fecha y Hora</th>
+                            <th>Cliente</th>
+                            <th>Productos / Items</th>
+                            <th class="text-end">Total (Bs)</th>
+                            <th class="text-end">Recibido</th>
+                            <th class="text-end">Cambio</th>
+                            <th class="text-center">Comprobante</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @if (!Model.Transacciones.Any())
+                        {
+                            <tr>
+                                <td colspan="8" class="text-center py-4 text-muted">
+                                    No se registraron ventas en el período seleccionado.
+                                </td>
+                            </tr>
+                        }
+                        else
+                        {
+                            @foreach (var v in Model.Transacciones)
+                            {
+                                <tr>
+                                    <td class="fw-bold text-primary">#@v.Id</td>
+                                    <td>@v.Fecha.ToString("dd/MM/yyyy HH:mm")</td>
+                                    <td>
+                                        <div class="fw-semibold">@(v.Cliente?.NombreCompleto ?? "Mostrador General")</div>
+                                        <small class="text-muted">Tel: @(v.Cliente?.Telefono ?? "-")</small>
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-secondary">@v.Detalles.Sum(d => d.Cantidad) u. en @v.Detalles.Count ítems</span>
+                                    </td>
+                                    <td class="text-end fw-bold text-success fs-6">Bs @v.Total.ToString("N2")</td>
+                                    <td class="text-end text-muted small">Bs @v.Recibido.ToString("N2")</td>
+                                    <td class="text-end text-muted small">Bs @v.Cambio.ToString("N2")</td>
+                                    <td class="text-center">
+                                        <a asp-controller="Ventas" asp-action="Details" asp-route-id="@v.Id" class="btn btn-sm btn-outline-primary" target="_blank">
+                                            <i class="bi bi-eye"></i> Ver
+                                        </a>
+                                    </td>
+                                </tr>
+                            }
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- 3. PESTAÑA: TOP PRODUCTOS & CATEGORÍAS -->
+    <div class="tab-pane fade" id="tab-productos" role="tabpanel">
+        <div class="row g-4">
+            <div class="col-lg-8 col-12">
+                <div class="card shadow-sm border-0 rounded-3">
+                    <div class="card-header bg-white py-3">
+                        <span class="fw-bold"><i class="bi bi-award-fill text-warning me-2"></i>Ranking de Productos Más Vendidos</span>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th style="width: 50px;">#</th>
+                                    <th>Producto</th>
+                                    <th>Categoría</th>
+                                    <th class="text-center">Unidades</th>
+                                    <th class="text-end">Total Recaudado</th>
+                                    <th class="text-center">Stock Actual</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @if (!Model.TopProductos.Any())
+                                {
+                                    <tr>
+                                        <td colspan="6" class="text-center py-4 text-muted">No hay datos de productos en este período.</td>
+                                    </tr>
+                                }
+                                else
+                                {
+                                    int rank = 1;
+                                    @foreach (var p in Model.TopProductos)
+                                    {
+                                        <tr>
+                                            <td>
+                                                @if (rank == 1)
+                                                {
+                                                    <span class="badge rounded-pill bg-warning text-dark"><i class="bi bi-trophy"></i> 1</span>
+                                                }
+                                                else if (rank == 2)
+                                                {
+                                                    <span class="badge rounded-pill bg-secondary text-white">2</span>
+                                                }
+                                                else if (rank == 3)
+                                                {
+                                                    <span class="badge rounded-pill bg-dark text-white">3</span>
+                                                }
+                                                else
+                                                {
+                                                    <span class="badge rounded-pill bg-light text-muted border">@rank</span>
+                                                }
+                                            </td>
+                                            <td class="fw-semibold">@p.Nombre</td>
+                                            <td><span class="badge bg-light text-dark border">@p.Categoria</span></td>
+                                            <td class="text-center fw-bold">@p.CantidadVendida u.</td>
+                                            <td class="text-end fw-bold text-success">Bs @p.TotalRecaudado.ToString("N2")</td>
+                                            <td class="text-center">
+                                                <span class="badge @(p.StockActual <= 10 ? "bg-danger" : "bg-success")">
+                                                    @p.StockActual u.
+                                                </span>
+                                            </td>
+                                        </tr>
+                                        rank++;
+                                    }
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Resumen de Categorías -->
+            <div class="col-lg-4 col-12">
+                <div class="card shadow-sm border-0 rounded-3">
+                    <div class="card-header bg-white py-3">
+                        <span class="fw-bold"><i class="bi bi-tags-fill text-info me-2"></i>Rendimiento por Categoría</span>
+                    </div>
+                    <div class="card-body p-0">
+                        <ul class="list-group list-group-flush">
+                            @foreach (var cat in Model.VentasPorCategoria)
+                            {
+                                <li class="list-group-item py-3">
+                                    <div class="d-flex justify-content-between align-items-center mb-1">
+                                        <span class="fw-semibold">@cat.Categoria</span>
+                                        <span class="fw-bold text-success">Bs @cat.TotalMonto.ToString("N2")</span>
+                                    </div>
+                                    <div class="progress" style="height: 6px;">
+                                        <div class="progress-bar bg-primary" role="progressbar" style="width: @cat.Porcentaje%;" aria-valuenow="@cat.Porcentaje" aria-valuemin="0" aria-valuemax="100"></div>
+                                    </div>
+                                    <div class="d-flex justify-content-between mt-1 text-muted small">
+                                        <span>@cat.CantidadItems u. vendidas</span>
+                                        <span>@cat.Porcentaje% del total</span>
+                                    </div>
+                                </li>
+                            }
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 4. PESTAÑA: CLIENTES FRECUENTES -->
+    <div class="tab-pane fade" id="tab-clientes" role="tabpanel">
+        <div class="card shadow-sm border-0 rounded-3">
+            <div class="card-header bg-white py-3">
+                <span class="fw-bold"><i class="bi bi-star-fill text-warning me-2"></i>Principales Clientes del Período</span>
+            </div>
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Cliente</th>
+                            <th>Teléfono</th>
+                            <th class="text-center">Compras Realizadas</th>
+                            <th class="text-end">Monto Total Facturado</th>
+                            <th class="text-end">Ticket Promedio</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @if (!Model.TopClientes.Any())
+                        {
+                            <tr>
+                                <td colspan="5" class="text-center py-4 text-muted">No hay registros de compras por cliente en este período.</td>
+                            </tr>
+                        }
+                        else
+                        {
+                            @foreach (var cli in Model.TopClientes)
+                            {
+                                var prom = cli.TotalCompras > 0 ? cli.TotalGastado / cli.TotalCompras : 0;
+                                <tr>
+                                    <td class="fw-bold">@cli.NombreCompleto</td>
+                                    <td><i class="bi bi-telephone text-muted me-1"></i>@cli.Telefono</td>
+                                    <td class="text-center"><span class="badge bg-primary rounded-pill">@cli.TotalCompras</span></td>
+                                    <td class="text-end fw-bold text-success">Bs @cli.TotalGastado.ToString("N2")</td>
+                                    <td class="text-end text-muted">Bs @prom.ToString("N2")</td>
+                                </tr>
+                            }
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- 5. PESTAÑA: STOCK CRÍTICO & ALERTAS -->
+    <div class="tab-pane fade" id="tab-inventario" role="tabpanel">
+        <div class="row g-3 mb-4">
+            <div class="col-md-4">
+                <div class="card border-0 shadow-sm p-3 border-start border-4 border-danger bg-white">
+                    <span class="text-muted small text-uppercase fw-bold">Stock Bajo o Crítico</span>
+                    <h3 class="fw-bold text-danger mb-0 mt-1">@Model.ProductosStockBajo.Count</h3>
+                    <small class="text-muted">Productos por debajo del mínimo</small>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card border-0 shadow-sm p-3 border-start border-4 border-dark bg-white">
+                    <span class="text-muted small text-uppercase fw-bold">Productos Agotados</span>
+                    <h3 class="fw-bold text-dark mb-0 mt-1">@Model.TotalProductosAgotados</h3>
+                    <small class="text-muted">Con stock igual a cero</small>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card border-0 shadow-sm p-3 border-start border-4 border-primary bg-white">
+                    <span class="text-muted small text-uppercase fw-bold">Valorización de Stock</span>
+                    <h3 class="fw-bold text-primary mb-0 mt-1">Bs @Model.ValorTotalInventario.ToString("N2")</h3>
+                    <small class="text-muted">Total en @Model.TotalProductosCatalogo productos</small>
+                </div>
+            </div>
+        </div>
+
+        <div class="card shadow-sm border-0 rounded-3">
+            <div class="card-header bg-white py-3">
+                <span class="fw-bold text-danger"><i class="bi bi-exclamation-triangle-fill me-2"></i>Catálogo de Productos con Requerimiento de Reposición</span>
+            </div>
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Producto</th>
+                            <th>Categoría</th>
+                            <th class="text-end">Precio (Bs)</th>
+                            <th class="text-center">Stock Actual</th>
+                            <th class="text-center">Stock Mínimo</th>
+                            <th>Estado</th>
+                            <th class="text-center">Acción</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @if (!Model.ProductosStockBajo.Any())
+                        {
+                            <tr>
+                                <td colspan="7" class="text-center py-4 text-success">
+                                    <i class="bi bi-check-circle-fill fs-4 d-block mb-1"></i>
+                                    ¡Excelente! Todos los productos cuentan con niveles de stock óptimos.
+                                </td>
+                            </tr>
+                        }
+                        else
+                        {
+                            @foreach (var p in Model.ProductosStockBajo)
+                            {
+                                <tr>
+                                    <td class="fw-semibold">@p.Nombre</td>
+                                    <td><span class="badge bg-light text-dark border">@(p.Categoria?.Nombre ?? "-")</span></td>
+                                    <td class="text-end fw-bold">Bs @p.Precio.ToString("N2")</td>
+                                    <td class="text-center">
+                                        <span class="badge @(p.Stock == 0 ? "bg-danger" : "bg-warning text-dark") fs-6 px-3">
+                                            @p.Stock u.
+                                        </span>
+                                    </td>
+                                    <td class="text-center text-muted">@p.StockMinimo u.</td>
+                                    <td>
+                                        @if (p.Stock == 0)
+                                        {
+                                            <span class="badge bg-danger">AGOTADO</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="badge bg-warning text-dark">STOCK BAJO</span>
+                                        }
+                                    </td>
+                                    <td class="text-center">
+                                        <a asp-controller="Productos" asp-action="Edit" asp-route-id="@p.Id" class="btn btn-sm btn-outline-primary">
+                                            <i class="bi bi-pencil-square"></i> Reponer
+                                        </a>
+                                    </td>
+                                </tr>
+                            }
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<!-- Scripts de Gráficos y Filtrado -->
+@section Scripts {
+    <!-- Chart.js CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <script>
+        // Toggle panel de filtro personalizado
+        function togglePersonalizado() {
+            const sec = document.getElementById('seccionPersonalizado');
+            const inp = document.getElementById('inputPeriodo');
+            if (sec.classList.contains('d-none')) {
+                sec.classList.remove('d-none');
+                inp.value = 'personalizado';
+            } else {
+                sec.classList.add('d-none');
+            }
+        }
+
+        // Búsqueda en vivo en tabla de ventas
+        function filtrarTablaVentas() {
+            const input = document.getElementById("tablaVentasSearch");
+            const filter = input.value.toUpperCase();
+            const table = document.getElementById("tablaVentas");
+            const tr = table.getElementsByTagName("tr");
+
+            for (let i = 1; i < tr.length; i++) {
+                let match = false;
+                const tds = tr[i].getElementsByTagName("td");
+                for (let j = 0; j < tds.length; j++) {
+                    if (tds[j]) {
+                        const txtValue = tds[j].textContent || tds[j].innerText;
+                        if (txtValue.toUpperCase().indexOf(filter) > -1) {
+                            match = true;
+                            break;
+                        }
+                    }
+                }
+                tr[i].style.display = match ? "" : "none";
+            }
+        }
+
+        // 1. Gráfico Cronológico de Ventas Diarias
+        const ventasDiasData = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.VentasPorDia));
+        const ctxVentas = document.getElementById('chartVentasDiarias');
+
+        if (ctxVentas && ventasDiasData) {
+            const labels = ventasDiasData.map(x => x.FechaFormateada || x.Fecha);
+            const dataTotals = ventasDiasData.map(x => x.Total);
+
+            new Chart(ctxVentas, {
+                type: 'line',
+                data: {
+                    labels: labels.length ? labels : ['Sin ventas'],
+                    datasets: [{
+                        label: 'Ingresos (Bs)',
+                        data: dataTotals.length ? dataTotals : [0],
+                        borderColor: '#2563eb',
+                        backgroundColor: 'rgba(37, 99, 235, 0.1)',
+                        fill: true,
+                        tension: 0.35,
+                        pointBackgroundColor: '#2563eb',
+                        pointRadius: 4,
+                        borderWidth: 2
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return ' Bs ' + Number(context.parsed.y).toLocaleString('es-BO', { minimumFractionDigits: 2 });
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                callback: function(val) { return 'Bs ' + val; }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // 2. Gráfico Donut de Categorías
+        const categoriasData = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.VentasPorCategoria));
+        const ctxCat = document.getElementById('chartCategorias');
+
+        if (ctxCat && categoriasData) {
+            const catLabels = categoriasData.map(x => x.Categoria);
+            const catValues = categoriasData.map(x => x.TotalMonto);
+            const palette = ['#10b981', '#3b82f6', '#f59e0b', '#8b5cf6', '#ec4899', '#14b8a6', '#64748b'];
+
+            new Chart(ctxCat, {
+                type: 'doughnut',
+                data: {
+                    labels: catLabels.length ? catLabels : ['Sin datos'],
+                    datasets: [{
+                        data: catValues.length ? catValues : [1],
+                        backgroundColor: palette.slice(0, catLabels.length || 1),
+                        borderWidth: 2,
+                        borderColor: '#ffffff'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: { boxWidth: 12, font: { size: 11 } }
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return ' ' + context.label + ': Bs ' + Number(context.parsed).toLocaleString('es-BO', { minimumFractionDigits: 2 });
+                                }
+                            }
+                        }
+                    },
+                    cutout: '65%'
+                }
+            });
+        }
+
+        // 3. Gráfico Horizontal de Top Productos
+        const topProdData = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.TopProductos.Take(5)));
+        const ctxTop = document.getElementById('chartTopProductos');
+
+        if (ctxTop && topProdData) {
+            new Chart(ctxTop, {
+                type: 'bar',
+                data: {
+                    labels: topProdData.map(x => x.Nombre),
+                    datasets: [{
+                        label: 'Recaudado (Bs)',
+                        data: topProdData.map(x => x.TotalRecaudado),
+                        backgroundColor: '#0ea5e9',
+                        borderRadius: 6
+                    }]
+                },
+                options: {
+                    indexAxis: 'y',
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return ' Recaudado: Bs ' + Number(context.parsed.x).toLocaleString('es-BO', { minimumFractionDigits: 2 });
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            beginAtZero: true,
+                            ticks: {
+                                callback: function(val) { return 'Bs ' + val; }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+    </script>
+}

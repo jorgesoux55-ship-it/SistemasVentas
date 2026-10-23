@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using SistemaVentas.Helpers;
 using SistemaVentas.Models;
 
 namespace SistemaVentas.Data;
@@ -14,6 +15,7 @@ public class AppDbContext : DbContext
     // Alias para compatibilidad con código que usa .Producto
     public DbSet<Producto> Producto => Set<Producto>();
     public DbSet<Venta> Ventas => Set<Venta>();
+    public DbSet<Usuario> Usuarios => Set<Usuario>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -53,7 +55,7 @@ public class AppDbContext : DbContext
             new Categoria { Id = 5, Nombre = "Snacks y Golosinas" }
         );
 
-        // Precarga de Clientes (Andy 16565432 como en la imagen)
+        // Precarga de Clientes
         modelBuilder.Entity<Cliente>().HasData(
             new Cliente { Id = 1, Nombre = "Andy", Apellido = "", Telefono = "16565432", Email = "andy@correo.com" },
             new Cliente { Id = 2, Nombre = "María", Apellido = "Flores", Telefono = "71234567", Email = "maria.flores@correo.com" },
@@ -70,6 +72,30 @@ public class AppDbContext : DbContext
             new Producto { Id = 5, Nombre = "Detergente OMO 800g", Precio = 15.00m, Stock = 60, StockMinimo = 8, CategoriaId = 1 },
             new Producto { Id = 6, Nombre = "Leche PIL 1L", Precio = 6.50m, Stock = 90, StockMinimo = 12, CategoriaId = 4 },
             new Producto { Id = 7, Nombre = "Galletas Mabel's Wafer", Precio = 3.50m, Stock = 120, StockMinimo = 20, CategoriaId = 5 }
+        );
+
+        // Precarga de Usuarios iniciales (Admin y Vendedor)
+        modelBuilder.Entity<Usuario>().HasData(
+            new Usuario
+            {
+                Id = 1,
+                Nombre = "Administrador Principal",
+                Username = "admin",
+                PasswordHash = PasswordHasher.HashPassword("admin123"),
+                Rol = "Administrador",
+                Activo = true,
+                FechaCreacion = new DateTime(2026, 1, 1, 0, 0, 0, DateTimeKind.Utc)
+            },
+            new Usuario
+            {
+                Id = 2,
+                Nombre = "Vendedor de Turno",
+                Username = "vendedor",
+                PasswordHash = PasswordHasher.HashPassword("vendedor123"),
+                Rol = "Vendedor",
+                Activo = true,
+                FechaCreacion = new DateTime(2026, 1, 1, 0, 0, 0, DateTimeKind.Utc)
+            }
         );
     }
 }

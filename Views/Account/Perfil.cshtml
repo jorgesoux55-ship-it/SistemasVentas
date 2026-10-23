@@ -1,0 +1,38 @@
+@{
+    ViewData["Title"] = "Mi Perfil";
+}
+
+<div class="row justify-content-center">
+    <div class="col-lg-6 col-md-8 col-12">
+        <div class="card shadow-sm border-0 rounded-3">
+            <div class="card-header bg-dark text-white p-4 text-center rounded-top-3">
+                <div class="bg-primary-subtle text-primary rounded-circle d-inline-flex p-3 mb-2">
+                    <i class="bi bi-person-circle fs-1"></i>
+                </div>
+                <h4 class="fw-bold mb-0">@ViewBag.Nombre</h4>
+                <span class="badge bg-primary mt-1">@ViewBag.Rol</span>
+            </div>
+            <div class="card-body p-4">
+                <ul class="list-group list-group-flush mb-4">
+                    <li class="list-group-item d-flex justify-content-between align-items-center py-3">
+                        <span class="text-muted"><i class="bi bi-person me-2"></i>Nombre de Usuario</span>
+                        <strong class="text-dark">@ViewBag.Username</strong>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between align-items-center py-3">
+                        <span class="text-muted"><i class="bi bi-shield-lock me-2"></i>Rol de Acceso</span>
+                        <span class="badge bg-success-subtle text-success border border-success">@ViewBag.Rol</span>
+                    </li>
+                </ul>
+
+                <div class="d-flex justify-content-between gap-2">
+                    <a asp-controller="Home" asp-action="Index" class="btn btn-outline-secondary">
+                        <i class="bi bi-arrow-left"></i> Volver al Inicio
+                    </a>
+                    <a asp-controller="Account" asp-action="Logout" class="btn btn-outline-danger">
+                        <i class="bi bi-box-arrow-right"></i> Cerrar Sesión
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

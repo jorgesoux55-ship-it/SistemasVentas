@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using SistemaVentas.Data;
@@ -5,6 +6,7 @@ using SistemaVentas.Models;
 
 namespace SistemaVentas.Controllers;
 
+[Authorize]
 public class VentasController : Controller
 {
     private readonly AppDbContext _context;

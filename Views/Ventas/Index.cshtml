@@ -1,65 +1,61 @@
 @model List<SistemaVentas.Models.Venta>
 @{
-    ViewData["Title"] = "Historial de Ventas";
+    ViewData["Title"] = "Ventas";
 }
 
 <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-2">
     <div>
-        <h2 class="fw-bold mb-0 text-dark">Historial de Ventas</h2>
-        <p class="text-muted small mb-0">Registro y control de comprobantes emitidos</p>
+        <div class="small mb-1" style="color:var(--text-muted);">Comprobantes emitidos</div>
+        <h2 class="fw-bold mb-0" style="color:var(--text-primary);font-size:1.3rem;">Historial de Ventas</h2>
     </div>
-    <div class="d-flex gap-2">
-        <a asp-action="Create" class="btn btn-emerald fw-semibold px-3 d-flex align-items-center gap-2">
-            <i class="bi bi-cart-plus-fill"></i>
-            <span>Nueva Venta</span>
-        </a>
-    </div>
+    <a asp-action="Create" class="btn btn-success d-flex align-items-center gap-2">
+        <i class="bi bi-cart-plus-fill"></i> Nueva Venta
+    </a>
 </div>
 
-<!-- Tarjetas resumen rápido -->
+<!-- KPIs -->
 <div class="row g-3 mb-4">
-    <div class="col-md-6 col-12">
-        <div class="app-card p-3 d-flex align-items-center justify-content-between border-start border-primary border-4">
+    <div class="col-md-6">
+        <div class="sv-kpi" style="--kpi-color:#3b82f6;--kpi-bg:rgba(59,130,246,0.12);">
             <div>
-                <span class="text-muted small text-uppercase fw-semibold">Ventas Registradas</span>
-                <h3 class="fw-bold mb-0 mt-1">@ViewBag.CantidadVentas</h3>
+                <div class="sv-kpi-label">Ventas Registradas</div>
+                <div class="sv-kpi-value">@ViewBag.CantidadVentas</div>
+                <div class="sv-kpi-sub">Comprobantes en el período</div>
             </div>
-            <div class="bg-primary-subtle text-primary p-3 rounded-circle">
-                <i class="bi bi-receipt fs-3"></i>
-            </div>
+            <div class="sv-kpi-icon"><i class="bi bi-receipt"></i></div>
         </div>
     </div>
-    <div class="col-md-6 col-12">
-        <div class="app-card p-3 d-flex align-items-center justify-content-between border-start border-success border-4">
+    <div class="col-md-6">
+        <div class="sv-kpi" style="--kpi-color:#10b981;--kpi-bg:rgba(16,185,129,0.12);">
             <div>
-                <span class="text-muted small text-uppercase fw-semibold">Total Recaudado</span>
-                <h3 class="fw-bold mb-0 mt-1 text-success">Bs @(((decimal)ViewBag.TotalRecaudado).ToString("N2"))</h3>
+                <div class="sv-kpi-label">Total Recaudado</div>
+                <div class="sv-kpi-value">Bs @(((decimal)ViewBag.TotalRecaudado).ToString("N2"))</div>
+                <div class="sv-kpi-sub">Monto acumulado</div>
             </div>
-            <div class="bg-success-subtle text-success p-3 rounded-circle">
-                <i class="bi bi-cash-stack fs-3"></i>
-            </div>
+            <div class="sv-kpi-icon"><i class="bi bi-cash-stack"></i></div>
         </div>
     </div>
 </div>
 
-<!-- Filtros de búsqueda -->
-<div class="app-card mb-4">
-    <div class="app-card-body">
+<!-- Filtros -->
+<div class="sv-card mb-4">
+    <div class="sv-card-body" style="padding:14px 20px;">
         <form method="get" class="row g-2 align-items-center">
             <div class="col-md-5 col-12">
                 <div class="input-group">
-                    <span class="input-group-text bg-white"><i class="bi bi-search text-muted"></i></span>
-                    <input type="text" name="buscar" value="@ViewBag.Buscar" class="form-control" placeholder="Buscar por cliente o N° de venta..." />
+                    <span class="input-group-text"><i class="bi bi-search"></i></span>
+                    <input type="text" name="buscar" value="@ViewBag.Buscar" class="form-control"
+                           placeholder="Buscar por cliente o N° de venta..." />
                 </div>
             </div>
             <div class="col-md-4 col-sm-6">
                 <input type="date" name="fecha" value="@ViewBag.Fecha" class="form-control" />
             </div>
             <div class="col-md-3 col-sm-6 d-flex gap-2">
-                <button type="submit" class="btn btn-primary w-100">
+                <button type="submit" class="btn btn-outline-primary w-100">
                     <i class="bi bi-filter"></i> Filtrar
                 </button>
-                <a asp-action="Index" class="btn btn-outline-secondary" title="Limpiar filtros">
+                <a asp-action="Index" class="btn btn-outline-secondary" title="Limpiar">
                     <i class="bi bi-arrow-clockwise"></i>
                 </a>
             </div>
@@ -67,29 +63,33 @@
     </div>
 </div>
 
-<!-- Tabla de ventas -->
-<div class="app-card">
+<!-- Tabla -->
+<div class="sv-card">
+    <div class="sv-card-header">
+        <span><i class="bi bi-receipt-cutoff"></i> Registro de Transacciones</span>
+        <span class="sv-pill sv-pill-blue">@(Model?.Count ?? 0) ventas</span>
+    </div>
     <div class="table-responsive">
-        <table class="table table-hover table-custom">
+        <table class="sv-table">
             <thead>
                 <tr>
-                    <th style="width: 80px;">N° Venta</th>
+                    <th style="width:80px;">N° Venta</th>
                     <th>Fecha y Hora</th>
                     <th>Cliente</th>
                     <th class="text-center">Artículos</th>
                     <th class="text-end">Total</th>
                     <th class="text-end">Recibido</th>
                     <th class="text-end">Cambio</th>
-                    <th class="text-center" style="width: 140px;">Acciones</th>
+                    <th class="text-center" style="width:120px;">Acciones</th>
                 </tr>
             </thead>
             <tbody>
                 @if (Model == null || !Model.Any())
                 {
                     <tr>
-                        <td colspan="8" class="text-center py-5 text-muted">
-                            <i class="bi bi-inbox fs-2 d-block mb-2 text-secondary opacity-50"></i>
-                            No se encontraron ventas registradas con los criterios seleccionados.
+                        <td colspan="8" class="text-center py-5" style="color:var(--text-muted);">
+                            <i class="bi bi-inbox fs-2 d-block mb-2 opacity-25"></i>
+                            No se encontraron ventas con los criterios seleccionados.
                         </td>
                     </tr>
                 }
@@ -98,30 +98,30 @@
                     @foreach (var v in Model)
                     {
                         <tr>
-                            <td class="fw-bold">#@v.Id</td>
-                            <td>@v.Fecha.ToString("dd/MM/yyyy HH:mm")</td>
+                            <td><span class="sv-pill sv-pill-blue">#@v.Id</span></td>
+                            <td style="color:var(--text-muted);">@v.Fecha.ToString("dd/MM/yy HH:mm")</td>
                             <td>
-                                <span class="fw-semibold">@(v.Cliente?.NombreCompleto ?? "Sin cliente")</span>
+                                <div class="fw-semibold">@(v.Cliente?.NombreCompleto ?? "—")</div>
                                 @if (!string.IsNullOrEmpty(v.Cliente?.Telefono))
                                 {
-                                    <span class="text-muted small d-block">Tel: @v.Cliente.Telefono</span>
+                                    <div class="small" style="color:var(--text-muted);">@v.Cliente.Telefono</div>
                                 }
                             </td>
                             <td class="text-center">
-                                <span class="badge bg-secondary-subtle text-secondary rounded-pill px-2 py-1">
-                                    @v.Detalles.Sum(d => d.Cantidad) items
-                                </span>
+                                <span class="sv-pill sv-pill-gray">@v.Detalles.Sum(d => d.Cantidad) u.</span>
                             </td>
-                            <td class="text-end fw-bold text-dark">Bs @v.Total.ToString("N2")</td>
-                            <td class="text-end text-muted">Bs @v.Recibido.ToString("N2")</td>
-                            <td class="text-end text-success">Bs @v.Cambio.ToString("N2")</td>
+                            <td class="text-end fw-bold" style="color:#10b981;">Bs @v.Total.ToString("N2")</td>
+                            <td class="text-end" style="color:var(--text-muted);">Bs @v.Recibido.ToString("N2")</td>
+                            <td class="text-end" style="color:#3b82f6;">Bs @v.Cambio.ToString("N2")</td>
                             <td class="text-center">
-                                <div class="btn-group btn-group-sm">
-                                    <a asp-action="Details" asp-route-id="@v.Id" class="btn btn-outline-primary" title="Ver Comprobante">
+                                <div class="d-flex justify-content-center gap-1">
+                                    <a asp-action="Details" asp-route-id="@v.Id" class="btn btn-sm btn-outline-primary" title="Ver Comprobante">
                                         <i class="bi bi-eye"></i>
                                     </a>
-                                    <form asp-action="Anular" asp-route-id="@v.Id" method="post" class="d-inline" onsubmit="return confirm('¿Está seguro de anular la venta #@v.Id? El stock será devuelto al inventario.');">
-                                        <button type="submit" class="btn btn-outline-danger" title="Anular venta">
+                                    <form asp-action="Anular" asp-route-id="@v.Id" method="post" class="d-inline"
+                                          onsubmit="return confirm('¿Anular la venta #@v.Id? El stock será devuelto.');">
+                                        @Html.AntiForgeryToken()
+                                        <button type="submit" class="btn btn-sm btn-outline-danger" title="Anular">
                                             <i class="bi bi-x-circle"></i>
                                         </button>
                                     </form>

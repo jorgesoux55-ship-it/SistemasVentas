@@ -1,112 +1,128 @@
 @model SistemaVentas.Models.Venta
 @{
-    ViewData["Title"] = $"Comprobante de Venta #{Model.Id}";
+    ViewData["Title"] = $"Comprobante #{Model.Id}";
 }
 
 <div class="row justify-content-center">
     <div class="col-lg-7 col-md-9 col-12">
+
+        <!-- Controles -->
         <div class="d-flex justify-content-between align-items-center mb-3 no-print">
             <a asp-action="Index" class="btn btn-outline-secondary btn-sm">
                 <i class="bi bi-arrow-left me-1"></i> Volver a Ventas
             </a>
             <div class="d-flex gap-2">
-                <button onclick="window.print()" class="btn btn-outline-dark btn-sm">
-                    <i class="bi bi-printer me-1"></i> Imprimir Comprobante
+                <button onclick="window.print()" class="btn btn-outline-secondary btn-sm">
+                    <i class="bi bi-printer me-1"></i> Imprimir
                 </button>
-                <a asp-action="Create" class="btn btn-emerald btn-sm">
+                <a asp-action="Create" class="btn btn-success btn-sm">
                     <i class="bi bi-plus-lg me-1"></i> Nueva Venta
                 </a>
             </div>
         </div>
 
-        <div class="app-card shadow-sm p-4 p-md-5" id="ticket-print-area">
-            <!-- Encabezado del Comprobante -->
-            <div class="text-center border-bottom pb-3 mb-3">
-                <h3 class="fw-bold mb-1 text-primary">SISTEMA DE VENTAS</h3>
-                <p class="text-muted small mb-1">Comprobante de Venta Electrónico</p>
-                <div class="badge bg-primary fs-6 px-3 py-1">N° @Model.Id.ToString("D6")</div>
+        <!-- Comprobante -->
+        <div class="sv-card" id="ticket-print-area" style="background:var(--bg-card);">
+            <!-- Header -->
+            <div class="text-center py-5 px-4" style="border-bottom:1px solid var(--border);background:linear-gradient(135deg,rgba(59,130,246,0.08),rgba(16,185,129,0.06));">
+                <div class="mb-2">
+                    <div class="d-inline-flex align-items-center justify-content-center rounded-circle mb-2"
+                         style="width:52px;height:52px;background:var(--accent);box-shadow:0 0 20px var(--accent-glow);">
+                        <i class="bi bi-receipt fs-4 text-white"></i>
+                    </div>
+                </div>
+                <h4 class="fw-bold mb-0" style="color:var(--text-primary);">COMPROBANTE DE VENTA</h4>
+                <p class="small mb-2" style="color:var(--text-muted);">Sistema de Ventas — Transacción Electrónica</p>
+                <span class="sv-pill sv-pill-blue" style="font-size:0.9rem;padding:6px 16px;">N° @Model.Id.ToString("D6")</span>
             </div>
 
-            <!-- Datos de la Venta y Cliente -->
-            <div class="row g-2 mb-3 small">
-                <div class="col-6">
-                    <span class="text-muted d-block">Fecha de Emisión:</span>
-                    <strong class="text-dark">@Model.Fecha.ToString("dd/MM/yyyy HH:mm:ss")</strong>
+            <!-- Datos -->
+            <div class="p-4">
+                <div class="row g-3 mb-4">
+                    <div class="col-6">
+                        <div class="small fw-semibold mb-1" style="color:var(--text-muted);">FECHA DE EMISIÓN</div>
+                        <div class="fw-semibold" style="color:var(--text-primary);">@Model.Fecha.ToString("dd/MM/yyyy")</div>
+                        <div class="small" style="color:var(--text-muted);">@Model.Fecha.ToString("HH:mm:ss")</div>
+                    </div>
+                    <div class="col-6 text-end">
+                        <div class="small fw-semibold mb-1" style="color:var(--text-muted);">ESTADO</div>
+                        <span class="sv-pill sv-pill-green">Completada</span>
+                    </div>
+                    <div class="col-12" style="border-top:1px solid var(--border);padding-top:12px;">
+                        <div class="small fw-semibold mb-1" style="color:var(--text-muted);">CLIENTE</div>
+                        <div class="fw-bold" style="color:var(--text-primary);font-size:1rem;">
+                            @(Model.Cliente?.NombreCompleto ?? "Cliente Mostrador")
+                        </div>
+                        @if (!string.IsNullOrEmpty(Model.Cliente?.Telefono))
+                        {
+                            <div class="small" style="color:var(--text-muted);">Tel: @Model.Cliente.Telefono</div>
+                        }
+                    </div>
                 </div>
-                <div class="col-6 text-end">
-                    <span class="text-muted d-block">Estado:</span>
-                    <span class="badge bg-success-subtle text-success">Completada</span>
-                </div>
-                <div class="col-12 mt-2 pt-2 border-top">
-                    <span class="text-muted d-block">Cliente:</span>
-                    <strong class="fs-6 text-dark">@(Model.Cliente?.NombreCompleto ?? "Cliente Mostrador")</strong>
-                    @if (!string.IsNullOrEmpty(Model.Cliente?.Telefono))
-                    {
-                        <span class="text-muted ms-2">| Tel: @Model.Cliente.Telefono</span>
-                    }
-                    @if (!string.IsNullOrEmpty(Model.Cliente?.Email))
-                    {
-                        <span class="text-muted ms-2">| @Model.Cliente.Email</span>
-                    }
-                </div>
-            </div>
 
-            <!-- Tabla de Detalles -->
-            <table class="table table-sm border-top border-bottom mt-3">
-                <thead class="table-light">
-                    <tr>
-                        <th>Cant.</th>
-                        <th>Descripción</th>
-                        <th class="text-end">P. Unit</th>
-                        <th class="text-end">Subtotal</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @foreach (var item in Model.Detalles)
-                    {
+                <!-- Detalles -->
+                <table class="sv-table mb-4" style="border-radius:8px;overflow:hidden;border:1px solid var(--border);">
+                    <thead>
                         <tr>
-                            <td class="fw-bold">@item.Cantidad</td>
-                            <td>
-                                <div>@(item.Producto?.Nombre ?? "Producto")</div>
-                                @if (item.Producto?.Categoria != null)
-                                {
-                                    <small class="text-muted">@item.Producto.Categoria.Nombre</small>
-                                }
-                            </td>
-                            <td class="text-end">Bs @item.Precio.ToString("N2")</td>
-                            <td class="text-end fw-semibold">Bs @item.Subtotal.ToString("N2")</td>
+                            <th style="width:60px;">Cant.</th>
+                            <th>Descripción</th>
+                            <th class="text-end">P. Unit.</th>
+                            <th class="text-end">Subtotal</th>
                         </tr>
-                    }
-                </tbody>
-            </table>
+                    </thead>
+                    <tbody>
+                        @foreach (var item in Model.Detalles)
+                        {
+                            <tr>
+                                <td><span class="sv-pill sv-pill-gray">@item.Cantidad</span></td>
+                                <td>
+                                    <div class="fw-semibold" style="color:var(--text-primary);">
+                                        @(item.Producto?.Nombre ?? "Producto")
+                                    </div>
+                                    @if (item.Producto?.Categoria != null)
+                                    {
+                                        <div class="small" style="color:var(--text-muted);">@item.Producto.Categoria.Nombre</div>
+                                    }
+                                </td>
+                                <td class="text-end" style="color:var(--text-muted);">Bs @item.Precio.ToString("N2")</td>
+                                <td class="text-end fw-bold" style="color:var(--text-primary);">Bs @item.Subtotal.ToString("N2")</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
 
-            <!-- Resumen Financiero -->
-            <div class="row justify-content-end mt-3">
-                <div class="col-md-6 col-8">
-                    <table class="table table-sm table-borderless">
-                        <tr>
-                            <td class="text-muted">Total Artículos:</td>
-                            <td class="text-end fw-semibold">@Model.Detalles.Sum(d => d.Cantidad)</td>
-                        </tr>
-                        <tr class="border-top">
-                            <td class="fs-5 fw-bold text-dark">TOTAL:</td>
-                            <td class="fs-5 fw-bold text-end text-dark">Bs @Model.Total.ToString("N2")</td>
-                        </tr>
-                        <tr>
-                            <td class="text-muted">Efectivo Recibido:</td>
-                            <td class="text-end">Bs @Model.Recibido.ToString("N2")</td>
-                        </tr>
-                        <tr>
-                            <td class="text-muted">Cambio / Vuelto:</td>
-                            <td class="text-end text-success fw-bold">Bs @Model.Cambio.ToString("N2")</td>
-                        </tr>
-                    </table>
+                <!-- Totales -->
+                <div class="row justify-content-end">
+                    <div class="col-md-7">
+                        <div class="sv-card" style="background:rgba(255,255,255,0.03);">
+                            <div class="p-3">
+                                <div class="d-flex justify-content-between mb-2 small">
+                                    <span style="color:var(--text-muted);">Total artículos:</span>
+                                    <span style="color:var(--text-secondary);">@Model.Detalles.Sum(d => d.Cantidad) u.</span>
+                                </div>
+                                <div class="d-flex justify-content-between mb-2 small">
+                                    <span style="color:var(--text-muted);">Efectivo recibido:</span>
+                                    <span style="color:var(--text-secondary);">Bs @Model.Recibido.ToString("N2")</span>
+                                </div>
+                                <div class="d-flex justify-content-between mb-2 small">
+                                    <span style="color:var(--text-muted);">Cambio / Vuelto:</span>
+                                    <span style="color:#3b82f6;font-weight:600;">Bs @Model.Cambio.ToString("N2")</span>
+                                </div>
+                                <div class="d-flex justify-content-between pt-2"
+                                     style="border-top:1px solid var(--border);margin-top:6px;">
+                                    <span class="fw-bold" style="color:var(--text-primary);">TOTAL:</span>
+                                    <span class="fw-bold" style="color:#10b981;font-size:1.2rem;">Bs @Model.Total.ToString("N2")</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
-            </div>
 
-            <div class="text-center text-muted small mt-4 pt-3 border-top">
-                <p class="mb-0">¡Gracias por su compra!</p>
-                <small>Conserve este ticket como constancia de su transacción.</small>
+                <!-- Footer -->
+                <div class="text-center mt-4 pt-3" style="border-top:1px solid var(--border);">
+                    <p class="fw-bold mb-0" style="color:var(--accent);">¡Gracias por su compra!</p>
+                    <p class="small mb-0" style="color:var(--text-muted);">Conserve este ticket como constancia de su transacción.</p>
+                </div>
             </div>
         </div>
     </div>

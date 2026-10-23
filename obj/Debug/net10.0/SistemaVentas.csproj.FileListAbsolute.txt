@@ -294,4 +294,8 @@ C:\Users\user\Desktop\SistemaVentas\obj\Debug\net10.0\compressed\106ysev53n-{0}-
 C:\Users\user\Desktop\SistemaVentas\obj\Debug\net10.0\compressed\ywnpwgcmqo-{0}-vwm90aes61-vwm90aes61.gz
 C:\Users\user\Desktop\SistemaVentas\obj\Debug\net10.0\compressed\owcybgpxq7-{0}-fsfg8t90hw-fsfg8t90hw.gz
 C:\Users\user\Desktop\SistemaVentas\obj\Debug\net10.0\SistemaVentas.sourcelink.json
-C:\Users\user\Desktop\SistemaVentas\obj\Debug\net10.0\compressed\gul9e2v52g-{0}-nehw0rkb15-nehw0rkb15.gz
+C:\Users\user\Desktop\SistemaVentas\bin\Debug\net10.0\publish\web.config
+C:\Users\user\Desktop\SistemaVentas\bin\Debug\net10.0\publish\SistemaVentas.deps.json
+C:\Users\user\Desktop\SistemaVentas\bin\Debug\net10.0\publish\SistemaVentas.runtimeconfig.json
+C:\Users\user\Desktop\SistemaVentas\bin\Debug\net10.0\publish\SistemaVentas.staticwebassets.endpoints.json
+C:\Users\user\Desktop\SistemaVentas\obj\Debug\net10.0\compressed\gul9e2v52g-{0}-785o3r679m-785o3r679m.gz
